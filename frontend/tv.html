@@ -436,6 +436,160 @@
             color: var(--text-white);
             text-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
         }
+
+        /* Mobile Responsive - < 768px */
+        @media (max-width: 768px) {
+            /* Container layout: stack vertically */
+            .container {
+                flex-direction: column;
+                padding: 16px;
+                gap: 12px;
+            }
+
+            /* Main content: take full width */
+            .main-content {
+                flex: 1;
+                gap: 12px;
+            }
+
+            /* Queue sidebar: full width, smaller height */
+            .queue-sidebar {
+                flex: 0 0 auto;
+                max-height: 35vh;
+                min-height: 120px;
+            }
+
+            /* Now Playing bar: compact */
+            .now-playing {
+                min-height: auto;
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .thumbnail {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+                flex-shrink: 0;
+            }
+
+            .now-playing-title {
+                font-size: 14px;
+            }
+
+            .now-playing-artist {
+                font-size: 12px;
+            }
+
+            .now-playing-requester {
+                font-size: 11px;
+            }
+
+            /* Lyrics section: reduced padding and font sizes */
+            .lyrics-section {
+                padding: 16px;
+                gap: 12px;
+            }
+
+            .logo {
+                font-size: 36px;
+            }
+
+            .join-message {
+                font-size: 14px;
+                word-break: break-word;
+            }
+
+            .lyric-current {
+                font-size: 24px;
+            }
+
+            .lyric-next {
+                font-size: 16px;
+            }
+
+            .lyric-previous {
+                font-size: 14px;
+            }
+
+            .lyric-roman {
+                font-size: 12px;
+                margin-top: 4px;
+            }
+
+            /* Queue header and items */
+            .queue-header {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .queue-list {
+                padding: 8px;
+                gap: 6px;
+            }
+
+            .queue-item {
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .queue-position {
+                font-size: 16px;
+                min-width: 24px;
+            }
+
+            .queue-thumbnail {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .queue-song-title {
+                font-size: 12px;
+            }
+
+            .queue-requester {
+                font-size: 10px;
+            }
+
+            .queue-status {
+                font-size: 9px;
+                padding: 3px 6px;
+            }
+
+            /* Up Next transition screen: smaller font sizes */
+            .up-next-label {
+                font-size: 32px;
+                letter-spacing: 2px;
+            }
+
+            .up-next-singer {
+                font-size: 28px;
+            }
+
+            .up-next-song {
+                font-size: 20px;
+            }
+
+            /* Background orbs: reduce size */
+            .orb-purple {
+                width: 200px;
+                height: 200px;
+            }
+
+            .orb-pink {
+                width: 250px;
+                height: 250px;
+            }
+
+            /* Room badge: adjust positioning for mobile */
+            .room-badge {
+                bottom: 10px;
+                left: 10px;
+                padding: 10px 12px;
+                font-size: 11px;
+            }
+        }
     </style>
 </head>
 <body>
