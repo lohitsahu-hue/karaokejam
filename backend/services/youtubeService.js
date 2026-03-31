@@ -10,7 +10,7 @@ function searchYouTube(query, maxResults = 8) {
 
     const params = new URLSearchParams({
       part: 'snippet',
-      q: query + ' official audio -karaoke -cover -remix -instrumental',
+      q: query,
       type: 'video',
       videoCategoryId: '10', // Music
       maxResults: String(maxResults),
