@@ -45,18 +45,64 @@ function parseLRC(lrcText) {
   return lines;
 }
 
+// Clean YouTube title to extract just the song name
+function cleanTitle(raw) {
+  if (!raw) return '';
+  let t = raw;
+  // Remove common YouTube suffixes/prefixes
+  t = t.replace(/\s*[\(\[](official\s*(music\s*)?video|full\s*video|lyric\s*video|audio|hd|hq|4k|1080p|visualizer|mv|ft\.?[^)\]]*|feat\.?[^)\]]*|video\s*song|with\s*lyrics)[\)\]]/gi, '');
+  // Remove text after pipes, dashes with extra info
+  t = t.replace(/\s*[|].*$/g, '');
+  // Remove "Full Video - MovieName" pattern
+  t = t.replace(/\s*full\s*video\s*[-–—]\s*.*/gi, '');
+  // Remove trailing " - Artist Name" if it looks like channel info
+  t = t.replace(/\s*[-–—]\s*(official|lyric|audio|video|full|hd|hq|visuali).*/gi, '');
+  // Remove emojis and special unicode
+  t = t.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FEFF}]/gu, '');
+  // Remove quotes
+  t = t.replace(/["""'']/g, '');
+  // Collapse whitespace
+  t = t.replace(/\s+/g, ' ').trim();
+  return t;
+}
+
+// Extract artist from YouTube channel name or title
+function cleanArtist(artist, title) {
+  if (!artist) return '';
+  let a = artist;
+  // Remove "- Topic" suffix from YouTube Music auto-generated channels
+  a = a.replace(/\s*-\s*Topic$/i, '');
+  // Remove "VEVO" suffix
+  a = a.replace(/VEVO$/i, '').trim();
+  return a;
+}
+
 // Auto-fetch best matching lyrics for a song
 async function fetchLyrics(title, artist) {
-  const queries = [
-    `${title} ${artist}`,
-    title,
-  ];
+  const cleaned = cleanTitle(title);
+  const cleanedArtist = cleanArtist(artist, title);
+
+  // Try multiple query strategies from specific to broad
+  const queries = [];
+  if (cleanedArtist && cleaned) queries.push(`${cleaned} ${cleanedArtist}`);
+  if (cleaned) queries.push(cleaned);
+  // Also try first part before dash (often "Artist - Song" format)
+  const dashParts = cleaned.split(/\s*[-–—]\s*/);
+  if (dashParts.length >= 2) {
+    queries.push(dashParts[1]); // song name
+    queries.push(`${dashParts[1]} ${dashParts[0]}`); // song + artist
+  }
+  // Fallback: raw title (first 40 chars)
+  if (title && title !== cleaned) queries.push(title.substring(0, 40));
+
+  log.info(`Lyrics search queries: ${JSON.stringify(queries)}`);
 
   for (const q of queries) {
     try {
       const results = await searchLyrics(q);
       if (results.length > 0) {
         const best = results[0];
+        log.info(`Lyrics found: "${best.title}" by ${best.artist} (query: "${q}")`);
         return {
           title: best.title,
           artist: best.artist,

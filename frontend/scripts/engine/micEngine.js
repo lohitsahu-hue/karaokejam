@@ -240,11 +240,21 @@ const MicEngine = {
     const dest = this.ctx.createMediaStreamDestination();
     this.masterGain.connect(dest);
 
-    // Create WebRTC peer connection
+    // Create WebRTC peer connection with STUN + TURN for reliability
     this.pc = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject',
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443',
+          username: 'openrelayproject',
+          credential: 'openrelayproject',
+        },
       ],
     });
 
