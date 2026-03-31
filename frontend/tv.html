@@ -169,6 +169,7 @@
             justify-content: center;
             flex-direction: column;
             gap: 40px;
+            min-height: 100px;
         }
 
         .logo {
@@ -241,6 +242,7 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
             overflow: hidden;
+            margin: 8px 0;
         }
 
         .progress-bar {
@@ -454,15 +456,16 @@
             }
 
             .main-content {
-                flex: none;
+                flex: 1;
+                min-height: 0;
                 width: 100%;
             }
 
             .queue-sidebar {
                 flex: none;
                 width: 100%;
-                max-height: 30vh;
-                min-height: 100px;
+                max-height: 25vh;
+                min-height: 80px;
                 border-radius: 8px;
             }
 
@@ -567,6 +570,20 @@
             .queue-status {
                 font-size: 9px;
                 padding: 2px 6px;
+            }
+
+            /* Compact queue items for mobile */
+            .queue-position {
+                font-size: 12px;
+                min-width: 20px;
+            }
+
+            .queue-song-title {
+                font-size: 11px;
+            }
+
+            .queue-requester {
+                font-size: 9px;
             }
 
             /* Up next screen */

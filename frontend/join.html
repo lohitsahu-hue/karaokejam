@@ -652,9 +652,10 @@
     .mic-fab {
       position: fixed;
       bottom: calc(var(--safe-area-bottom) + 80px);
-      right: 16px;
+      right: max(16px, env(safe-area-inset-right));
       z-index: 50;
       display: none;
+      box-sizing: border-box;
     }
 
     .mic-fab.visible {
@@ -664,6 +665,8 @@
     .mic-fab-btn {
       width: 56px;
       height: 56px;
+      min-height: 56px;
+      min-width: 56px;
       border-radius: 50%;
       border: 2px solid rgba(167, 139, 250, 0.4);
       background: rgba(15, 15, 23, 0.95);
@@ -674,6 +677,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      box-sizing: border-box;
+      flex-shrink: 0;
     }
 
     .mic-fab-btn.live {
@@ -1069,12 +1074,19 @@
 
       .mic-fab {
         bottom: calc(var(--safe-area-bottom) + 60px);
+        right: max(12px, env(safe-area-inset-right));
       }
 
       .mic-fab-btn {
         width: 48px;
         height: 48px;
+        min-height: 48px;
+        min-width: 48px;
         font-size: 20px;
+      }
+
+      .mic-drawer {
+        padding: 16px 16px calc(var(--safe-area-bottom) + 12px);
       }
 
       .mic-go-live-btn {

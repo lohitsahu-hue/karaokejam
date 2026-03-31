@@ -986,7 +986,7 @@
             /* ===== BODY & OVERFLOW ===== */
             body {
                 overflow-x: hidden;
-                overflow-y: auto;
+                overflow-y: auto !important;
             }
 
             /* ===== LANDING VIEW ===== */
@@ -1026,6 +1026,11 @@
                 flex: 0 0 100%;
                 gap: 16px;
                 order: 2;
+                flex-wrap: wrap;
+            }
+
+            .host-info, .guests-info {
+                flex: 0 0 auto;
             }
 
             .host-info h3, .guests-info h3 {
@@ -1054,16 +1059,18 @@
             .room-content {
                 flex-direction: column;
                 overflow-y: auto;
-                height: calc(100vh - 160px);
+                -webkit-overflow-scrolling: touch;
+                height: auto;
             }
 
             .search-panel {
                 flex: none;
                 width: 100%;
-                max-height: 50vh;
+                max-height: none;
                 border-right: none;
                 border-bottom: 1px solid rgba(167, 139, 250, 0.2);
                 padding: 16px;
+                overflow: visible;
             }
 
             .search-header h2 {
@@ -1093,8 +1100,9 @@
             .queue-panel {
                 flex: none;
                 width: 100%;
-                max-height: 50vh;
+                max-height: none;
                 padding: 16px;
+                overflow: visible;
             }
 
             .queue-header h2 {
@@ -1102,7 +1110,8 @@
             }
 
             #queue-list {
-                max-height: 40vh;
+                max-height: none;
+                overflow: visible;
             }
 
             /* ===== MIXER VIEW ===== */
