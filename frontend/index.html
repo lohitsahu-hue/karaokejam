@@ -1,130 +1,1283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Karaoke Party</title>
-<link rel="stylesheet" href="/styles/main.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaraokeJam - Host Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a1a;
+            color: #e5e7eb;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* ===== VIEW SYSTEM ===== */
+        .view { display: none; }
+        .view.active { display: flex; }
+
+        /* ===== LANDING VIEW ===== */
+        #view-landing {
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #0a0a1a;
+        }
+
+        .landing-card {
+            background: rgba(20, 20, 40, 0.8);
+            border: 2px solid rgba(167, 139, 250, 0.3);
+            border-radius: 16px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(124, 58, 237, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .karaoke-logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .karaoke-logo h1 {
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .landing-card h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #e5e7eb;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(50, 50, 80, 0.6);
+            border: 1.5px solid rgba(167, 139, 250, 0.3);
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #a78bfa;
+            background: rgba(50, 50, 80, 0.9);
+            box-shadow: 0 0 12px rgba(167, 139, 250, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #btn-create-room {
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            color: white;
+        }
+
+        #btn-create-room:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+        }
+
+        #btn-create-room:active {
+            transform: translateY(0);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 24px 0;
+            color: rgba(167, 139, 250, 0.5);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .join-section h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(229, 231, 235, 0.7);
+            margin-bottom: 12px;
+        }
+
+        .join-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        #input-room-code {
+            flex: 1;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        #btn-join-room {
+            flex: 0 0 70px;
+            background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+            color: white;
+        }
+
+        #btn-join-room:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(244, 114, 182, 0.4);
+        }
+
+        #input-name {
+            margin-bottom: 0;
+        }
+
+        /* ===== ROOM VIEW ===== */
+        #view-room {
+            flex-direction: column;
+            height: 100vh;
+            background: #0a0a1a;
+        }
+
+        .room-header {
+            background: rgba(20, 20, 40, 0.9);
+            border-bottom: 2px solid rgba(167, 139, 250, 0.2);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .room-code-section {
+            flex: 0 0 auto;
+        }
+
+        .room-code-label {
+            font-size: 12px;
+            color: rgba(229, 231, 235, 0.6);
+            font-weight: 500;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #room-code-display {
+            font-size: 32px;
+            font-weight: 700;
+            color: #a78bfa;
+            letter-spacing: 2px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        #room-code-display:hover {
+            background: rgba(167, 139, 250, 0.1);
+        }
+
+        .room-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .host-info h3 {
+            font-size: 12px;
+            color: rgba(229, 231, 235, 0.6);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        #room-host-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f472b6;
+        }
+
+        .guests-info h3 {
+            font-size: 12px;
+            color: rgba(229, 231, 235, 0.6);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        #room-guests {
+            font-size: 18px;
+            font-weight: 600;
+            color: #a78bfa;
+        }
+
+        .room-actions {
+            display: flex;
+            gap: 12px;
+            flex: 0 0 auto;
+        }
+
+        .header-btn {
+            padding: 10px 16px;
+            background: rgba(124, 58, 237, 0.2);
+            border: 1.5px solid rgba(167, 139, 250, 0.4);
+            color: #a78bfa;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .header-btn:hover {
+            background: rgba(124, 58, 237, 0.4);
+            border-color: #a78bfa;
+        }
+
+        /* ===== ROOM CONTENT ===== */
+        .room-content {
+            display: flex;
+            flex: 1;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .search-panel {
+            flex: 0 0 60%;
+            background: #0a0a1a;
+            border-right: 2px solid rgba(167, 139, 250, 0.2);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .search-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #e5e7eb;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        #search-input {
+            flex: 1;
+            padding: 10px 14px;
+            background: rgba(50, 50, 80, 0.6);
+            border: 1.5px solid rgba(167, 139, 250, 0.3);
+            border-radius: 6px;
+            color: #e5e7eb;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        #search-input:focus {
+            outline: none;
+            border-color: #a78bfa;
+            background: rgba(50, 50, 80, 0.9);
+        }
+
+        #btn-search {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            border: none;
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+        }
+
+        #search-results {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .search-result-item {
+            background: rgba(50, 50, 80, 0.5);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-result-item:hover {
+            background: rgba(50, 50, 80, 0.8);
+            border-color: rgba(167, 139, 250, 0.5);
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #e5e7eb;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .result-artist {
+            color: rgba(229, 231, 235, 0.6);
+            font-size: 12px;
+        }
+
+        /* ===== QUEUE PANEL ===== */
+        .queue-panel {
+            flex: 0 0 40%;
+            background: rgba(20, 20, 40, 0.6);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .queue-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .queue-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        #queue-count {
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        #queue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            flex: 1;
+            margin-bottom: 16px;
+        }
+
+        .queue-item {
+            background: rgba(50, 50, 80, 0.5);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .queue-item:hover {
+            background: rgba(50, 50, 80, 0.8);
+            border-color: rgba(167, 139, 250, 0.4);
+        }
+
+        .queue-item.dragging {
+            opacity: 0.5;
+        }
+
+        .queue-number {
+            flex: 0 0 24px;
+            height: 24px;
+            background: rgba(167, 139, 250, 0.2);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #a78bfa;
+        }
+
+        .queue-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .queue-title {
+            font-weight: 600;
+            color: #e5e7eb;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .queue-artist {
+            color: rgba(229, 231, 235, 0.6);
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .queue-status {
+            flex: 0 0 auto;
+            padding: 2px 8px;
+            background: rgba(167, 139, 250, 0.15);
+            border-radius: 4px;
+            font-size: 10px;
+            color: #a78bfa;
+            font-weight: 500;
+        }
+
+        .queue-status.playing {
+            background: rgba(244, 114, 182, 0.15);
+            color: #f472b6;
+        }
+
+        .queue-actions {
+            display: flex;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+
+        .queue-btn {
+            padding: 4px 8px;
+            background: rgba(167, 139, 250, 0.15);
+            border: none;
+            color: #a78bfa;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .queue-btn:hover {
+            background: rgba(167, 139, 250, 0.3);
+        }
+
+        /* ===== NOW PLAYING BAR ===== */
+        .now-playing-bar {
+            background: rgba(20, 20, 40, 0.9);
+            border-top: 2px solid rgba(167, 139, 250, 0.2);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .np-info {
+            flex: 1;
+        }
+
+        #np-title {
+            font-weight: 600;
+            color: #e5e7eb;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        #np-artist {
+            color: rgba(229, 231, 235, 0.6);
+            font-size: 12px;
+        }
+
+        .np-controls {
+            display: flex;
+            gap: 12px;
+            flex: 0 0 auto;
+        }
+
+        .np-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            border: none;
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .np-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+        }
+
+        #btn-next-song {
+            background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+        }
+
+        #btn-next-song:hover {
+            box-shadow: 0 6px 16px rgba(244, 114, 182, 0.3);
+        }
+
+        /* ===== MIXER VIEW ===== */
+        #view-mixer {
+            flex-direction: column;
+            height: 100vh;
+            background: #0a0a1a;
+            overflow-y: auto;
+        }
+
+        .mixer-header {
+            background: rgba(20, 20, 40, 0.9);
+            border-bottom: 2px solid rgba(167, 139, 250, 0.2);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .mixer-back {
+            padding: 8px 16px;
+            background: rgba(167, 139, 250, 0.15);
+            border: none;
+            color: #a78bfa;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mixer-back:hover {
+            background: rgba(167, 139, 250, 0.3);
+        }
+
+        .mixer-info h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e5e7eb;
+            margin-bottom: 2px;
+        }
+
+        .mixer-info p {
+            color: rgba(229, 231, 235, 0.6);
+            font-size: 13px;
+        }
+
+        #mixer-container {
+            flex: 1;
+            padding: 32px 24px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .mixer-section {
+            background: rgba(50, 50, 80, 0.5);
+            border: 1.5px solid rgba(167, 139, 250, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .mixer-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #a78bfa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .progress-bar-wrapper {
+            margin-bottom: 16px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: rgba(229, 231, 235, 0.6);
+            margin-bottom: 8px;
+        }
+
+        #lo-progress-wrap, .progress-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(167, 139, 250, 0.15);
+            border-radius: 3px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        #lo-progress-bar, .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #a78bfa 0%, #f472b6 100%);
+            border-radius: 3px;
+            width: 0%;
+        }
+
+        .stem-slider {
+            margin-bottom: 20px;
+        }
+
+        .stem-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 500;
+            color: #e5e7eb;
+            margin-bottom: 8px;
+        }
+
+        .stem-percent {
+            color: #a78bfa;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(167, 139, 250, 0.15);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 12px rgba(167, 139, 250, 0.5);
+            transform: scale(1.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            box-shadow: 0 0 12px rgba(167, 139, 250, 0.5);
+            transform: scale(1.2);
+        }
+
+        .mixer-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .mixer-btn {
+            padding: 10px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            border: none;
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mixer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+        }
+
+        .key-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .key-value {
+            flex: 0 0 50px;
+            text-align: center;
+            font-weight: 600;
+            color: #a78bfa;
+            font-size: 16px;
+        }
+
+        .key-slider {
+            flex: 1;
+        }
+
+        .sync-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .sync-btn {
+            flex: 1;
+            padding: 8px;
+            background: rgba(167, 139, 250, 0.15);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            color: #a78bfa;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sync-btn:hover {
+            background: rgba(167, 139, 250, 0.3);
+            border-color: #a78bfa;
+        }
+
+        .lyrics-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-switch {
+            width: 40px;
+            height: 24px;
+            background: rgba(167, 139, 250, 0.2);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            border-color: #a78bfa;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 10px;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            left: 18px;
+        }
+
+        .lyrics-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 10, 26, 0.95) 0%, rgba(30, 20, 50, 0.95) 100%);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #e5e7eb;
+            backdrop-filter: blur(10px);
+        }
+
+        .lyrics-overlay.active {
+            display: flex;
+        }
+
+        .lyrics-header {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            padding: 0 24px;
+        }
+
+        #lo-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #lo-artist {
+            font-size: 14px;
+            color: rgba(229, 231, 235, 0.6);
+        }
+
+        .lyrics-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            gap: 24px;
+        }
+
+        .lyric-line {
+            text-align: center;
+        }
+
+        .lo-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: rgba(229, 231, 235, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .lyric-line:nth-child(2) .lo-text {
+            font-size: 24px;
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+
+        .lo-roman {
+            font-size: 12px;
+            color: rgba(167, 139, 250, 0.5);
+            margin-top: 4px;
+        }
+
+        .lyrics-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 24px;
+            width: 100%;
+        }
+
+        .lyrics-progress {
+            margin-bottom: 20px;
+        }
+
+        .lyrics-time {
+            text-align: center;
+            font-size: 12px;
+            color: rgba(229, 231, 235, 0.6);
+        }
+
+        .lyrics-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .lyrics-btn {
+            padding: 10px 20px;
+            background: rgba(167, 139, 250, 0.15);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            color: #a78bfa;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lyrics-btn:hover {
+            background: rgba(167, 139, 250, 0.3);
+            border-color: #a78bfa;
+        }
+
+        #lo-close {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            width: 40px;
+            height: 40px;
+            background: rgba(167, 139, 250, 0.15);
+            border: none;
+            color: #a78bfa;
+            border-radius: 6px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #lo-close:hover {
+            background: rgba(167, 139, 250, 0.3);
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(167, 139, 250, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(167, 139, 250, 0.5);
+        }
+    </style>
 </head>
 <body>
+    <!-- LANDING VIEW -->
+    <div id="view-landing" class="view active">
+        <div class="landing-card">
+            <div class="karaoke-logo">
+                <h1>KaraokeJam</h1>
+            </div>
 
-<!-- ═══ VIEW: Landing / Join ═══ -->
-<div id="view-landing" class="view active">
-  <div class="landing">
-    <h1 class="logo">🎤 Karaoke Party</h1>
-    <p class="tagline">Host a karaoke session. Everyone joins from their phone.</p>
+            <h2>Create Room</h2>
+            <div class="form-group">
+                <input type="text" id="input-name" placeholder="Your Name">
+            </div>
+            <button id="btn-create-room">Create Room</button>
 
-    <div class="landing-actions">
-      <button class="btn btn-primary btn-lg" id="btn-create-room">Create Room</button>
-      <div class="divider">or</div>
-      <div class="join-row">
-        <input type="text" id="input-room-code" placeholder="Room code (e.g. KRK-4A7B)" maxlength="8" class="input-code">
-        <button class="btn btn-secondary" id="btn-join-room">Join</button>
-      </div>
+            <div class="divider">or</div>
+
+            <div class="join-section">
+                <h3>Join Existing Room</h3>
+                <div class="join-controls">
+                    <input type="text" id="input-room-code" placeholder="ROOM CODE">
+                    <button id="btn-join-room">Join</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="name-row">
-      <label>Your name</label>
-      <input type="text" id="input-name" placeholder="Enter your name" class="input-name" value="">
-    </div>
-  </div>
-</div>
+    <!-- ROOM VIEW -->
+    <div id="view-room" class="view">
+        <div class="room-header">
+            <div class="room-code-section">
+                <div class="room-code-label">Room Code</div>
+                <div id="room-code-display">----</div>
+            </div>
 
-<!-- ═══ VIEW: Room (Host + Guest) ═══ -->
-<div id="view-room" class="view">
-  <header class="room-header">
-    <div class="room-info">
-      <span class="room-code-display" id="room-code-display">---</span>
-      <span class="room-host" id="room-host-name"></span>
-    </div>
-    <div class="room-guests" id="room-guests">0 guests</div>
-  </header>
+            <div class="room-info">
+                <div class="host-info">
+                    <div id="room-host-name">Loading...</div>
+                </div>
+                <div class="guests-info">
+                    <h3>Guests</h3>
+                    <div id="room-guests">0</div>
+                </div>
+            </div>
 
-  <!-- Song Search -->
-  <div class="search-section">
-    <div class="search-bar">
-      <input type="text" id="search-input" placeholder="Search for a song..." class="search-input">
-      <button class="btn btn-primary" id="btn-search">Search</button>
-    </div>
-    <div class="search-results" id="search-results"></div>
-  </div>
+            <div class="room-actions">
+                <button class="header-btn" id="btn-open-tv">Open TV</button>
+                <button class="header-btn" id="btn-share-link">Share Link</button>
+            </div>
+        </div>
 
-  <!-- Queue -->
-  <div class="queue-section">
-    <h2 class="section-title">Queue <span class="queue-count" id="queue-count">0</span></h2>
-    <div class="queue-list" id="queue-list">
-      <div class="queue-empty">No songs yet — search and add one!</div>
-    </div>
-  </div>
+        <div class="room-content">
+            <div class="search-panel">
+                <div class="search-header">
+                    <h2>Search Songs</h2>
+                </div>
+                <div class="search-controls">
+                    <input type="text" id="search-input" placeholder="Search by title or artist...">
+                    <button id="btn-search">Search</button>
+                </div>
+                <div id="search-results"></div>
+            </div>
 
-  <!-- Now Playing (host only) -->
-  <div class="now-playing" id="now-playing" style="display:none">
-    <div class="np-info">
-      <span class="np-label">Now Playing</span>
-      <span class="np-title" id="np-title">—</span>
-      <span class="np-artist" id="np-artist"></span>
-    </div>
-    <div class="np-controls">
-      <button class="btn btn-sm" id="btn-open-mixer">Open Mixer</button>
-      <button class="btn btn-sm" id="btn-next-song">Skip ⏭</button>
-    </div>
-  </div>
-</div>
+            <div class="queue-panel">
+                <div class="queue-header">
+                    <h2>Queue</h2>
+                    <div id="queue-count">0</div>
+                </div>
+                <div id="queue-list"></div>
+            </div>
+        </div>
 
-<!-- ═══ VIEW: Mixer (Host — embedded from prototype) ═══ -->
-<div id="view-mixer" class="view">
-  <button class="btn-back" id="btn-back-to-room">← Back to Room</button>
-  <div id="mixer-container">
-    <!-- Mixer UI built dynamically by mixerView.js -->
-  </div>
-</div>
-
-<!-- ═══ Full-Screen Cinematic Lyrics Overlay ═══ -->
-<div class="lyrics-overlay" id="lyrics-overlay">
-  <div class="lo-header">
-    <div class="lo-song-info">
-      <span class="lo-song-title" id="lo-title"></span>
-      <span class="lo-song-artist" id="lo-artist"></span>
+        <div class="now-playing-bar">
+            <div class="np-info">
+                <div id="np-title">Select a song to play</div>
+                <div id="np-artist">No song selected</div>
+            </div>
+            <div class="np-controls">
+                <button class="np-btn" id="btn-open-mixer">Open Mixer</button>
+                <button class="np-btn" id="btn-next-song">Skip</button>
+            </div>
+        </div>
     </div>
-    <button class="lo-close" id="lo-close">✕</button>
-  </div>
 
-  <div class="lo-lines">
-    <div class="lo-line prev" id="lo-prev"><div class="lo-text"></div><div class="lo-roman"></div></div>
-    <div class="lo-line curr" id="lo-curr"><div class="lo-text"></div><div class="lo-roman"></div></div>
-    <div class="lo-line next" id="lo-next"><div class="lo-text"></div><div class="lo-roman"></div></div>
-  </div>
+    <!-- MIXER VIEW -->
+    <div id="view-mixer" class="view">
+        <div class="mixer-header">
+            <button class="mixer-back" id="btn-back-to-room">Back to Room</button>
+            <div class="mixer-info">
+                <h2 id="mixer-song-title">Loading...</h2>
+                <p id="mixer-song-artist">Loading...</p>
+            </div>
+        </div>
 
-  <div class="lo-controls">
-    <div class="lo-transport">
-      <button class="btn btn-sm" id="lo-restart">⏮</button>
-      <button class="btn btn-primary" id="lo-playpause">⏸</button>
-      <button class="btn btn-sm" id="lo-skip">⏭</button>
-    </div>
-    <div class="lo-progress-wrap" id="lo-progress-wrap">
-      <div class="lo-progress-bar" id="lo-progress-bar"></div>
-    </div>
-    <div class="lo-time" id="lo-time">0:00 / 0:00</div>
-    <div class="lo-sync">
-      <button class="btn btn-sm" id="lo-sync-minus">-0.5s</button>
-      <span class="lo-sync-value" id="lo-sync-value">Sync: 0.0s</span>
-      <button class="btn btn-sm" id="lo-sync-plus">+0.5s</button>
-      <button class="btn btn-sm" id="lo-sync-auto">Auto</button>
-      <button class="btn btn-sm" id="lo-sync-reset">Reset</button>
-    </div>
-  </div>
-</div>
+        <div id="mixer-container">
+            <!-- Progress Bar Section -->
+            <div class="mixer-section">
+                <div class="mixer-section-title">Progress</div>
+                <div class="progress-bar-wrapper">
+                    <div class="progress-label">
+                        <span>0:00</span>
+                        <span id="mx-time">0:00</span>
+                    </div>
+                    <div id="mx-progress-wrap" class="progress-track">
+                        <div id="mx-progress-bar" class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="/scripts/api/client.js"></script>
-<script src="/scripts/api/socketClient.js"></script>
-<script src="/scripts/engine/audioEngine.js"></script>
-<script src="/scripts/engine/lyricsEngine.js"></script>
-<script src="/scripts/engine/stemLoader.js"></script>
-<script src="/scripts/views/roomView.js"></script>
-<script src="/scripts/views/searchView.js"></script>
-<script src="/scripts/views/queueView.js"></script>
-<script src="/scripts/views/mixerView.js"></script>
-<script src="/scripts/app.js"></script>
+            <!-- Transport Controls -->
+            <div class="mixer-section">
+                <div class="mixer-section-title">Transport</div>
+                <div class="mixer-buttons">
+                    <button class="mixer-btn" id="mx-playpause">Play/Pause</button>
+                    <button class="mixer-btn" id="mx-restart">Restart</button>
+                    <button class="mixer-btn" id="mx-skip">Skip</button>
+                </div>
+            </div>
+
+            <!-- Stem Sliders -->
+            <div class="mixer-section">
+                <div class="mixer-section-title">Stems</div>
+
+                <div class="stem-slider">
+                    <div class="stem-label">
+                        <span>Lead Vocals</span>
+                        <span class="stem-percent" id="stem-lead-percent">100%</span>
+                    </div>
+                    <input type="range" id="stem-lead" min="0" max="100" value="100">
+                </div>
+
+                <div class="stem-slider">
+                    <div class="stem-label">
+                        <span>Backing Vocals</span>
+                        <span class="stem-percent" id="stem-backing-percent">100%</span>
+                    </div>
+                    <input type="range" id="stem-backing" min="0" max="100" value="100">
+                </div>
+
+                <div class="stem-slider">
+                    <div class="stem-label">
+                        <span>Drums</span>
+                        <span class="stem-percent" id="stem-drums-percent">100%</span>
+                    </div>
+                    <input type="range" id="stem-drums" min="0" max="100" value="100">
+                </div>
+
+                <div class="stem-slider">
+                    <div class="stem-label">
+                        <span>Bass</span>
+                        <span class="stem-percent" id="stem-bass-percent">100%</span>
+                    </div>
+                    <input type="range" id="stem-bass" min="0" max="100" value="100">
+                </div>
+
+                <div class="stem-slider">
+                    <div class="stem-label">
+                        <span>Other</span>
+                        <span class="stem-percent" id="stem-other-percent">100%</span>
+                    </div>
+                    <input type="range" id="stem-other" min="0" max="100" value="100">
+                </div>
+            </div>
+
+            <!-- Key Change -->
+            <div class="mixer-section">
+                <div class="mixer-section-title">Key Change</div>
+                <div class="key-control">
+                    <div class="key-value" id="key-value">0</div>
+                    <input type="range" class="key-slider" id="key-slider" min="-6" max="6" value="0">
+                </div>
+                <div style="font-size: 12px; color: rgba(229, 231, 235, 0.6); margin-top: 8px; text-align: center;">
+                    Semitones
+                </div>
+            </div>
+
+            <!-- Sync Controls -->
+            <div class="mixer-section">
+                <div class="mixer-section-title">Sync Adjustment</div>
+                <div class="sync-controls">
+                    <button class="sync-btn" id="mx-sync-minus">-0.5s</button>
+                    <button class="sync-btn" id="mx-sync-value">±0.0s</button>
+                    <button class="sync-btn" id="mx-sync-plus">+0.5s</button>
+                    <button class="sync-btn" id="mx-sync-auto">Auto</button>
+                    <button class="sync-btn" id="mx-sync-reset">Reset</button>
+                </div>
+            </div>
+
+            <!-- Lyrics Toggle -->
+            <div class="mixer-section">
+                <div class="mixer-section-title">Display</div>
+                <div class="lyrics-toggle">
+                    <span style="font-size: 14px; font-weight: 500;">Show Lyrics</span>
+                    <div class="toggle-switch" id="lyrics-toggle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LYRICS OVERLAY (used by mixerView.js — IDs match its expectations) -->
+    <div class="lyrics-overlay" id="lyrics-overlay">
+        <div class="lyrics-header">
+            <div id="lo-title">Song Title</div>
+            <div id="lo-artist">Artist Name</div>
+            <button id="lo-close">✕</button>
+        </div>
+
+        <div class="lyrics-content">
+            <div class="lyric-line">
+                <div class="lo-text" id="lo-prev">Previous lyric...</div>
+                <div class="lo-roman" id="lo-prev-roman"></div>
+            </div>
+            <div class="lyric-line">
+                <div class="lo-text" id="lo-curr">Current lyric...</div>
+                <div class="lo-roman" id="lo-curr-roman"></div>
+            </div>
+            <div class="lyric-line">
+                <div class="lo-text" id="lo-next">Next lyric...</div>
+                <div class="lo-roman" id="lo-next-roman"></div>
+            </div>
+        </div>
+
+        <div class="lyrics-footer">
+            <div class="lyrics-progress">
+                <div class="progress-track" id="lo-progress-wrap" style="margin-bottom: 12px;">
+                    <div class="progress-fill" id="lo-progress-bar"></div>
+                </div>
+                <div class="lyrics-time">
+                    <span id="lo-time">0:00</span> / <span id="lo-duration">0:00</span>
+                </div>
+            </div>
+            <div class="lyrics-controls">
+                <button class="lyrics-btn" id="lo-sync-minus">-0.5s</button>
+                <button class="lyrics-btn" id="lo-playpause">Play/Pause</button>
+                <button class="lyrics-btn" id="lo-skip">Skip</button>
+                <button class="lyrics-btn" id="lo-sync-plus">+0.5s</button>
+                <button class="lyrics-btn" id="lo-sync-auto">Auto-sync</button>
+                <button class="lyrics-btn" id="lo-sync-reset">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/api/client.js"></script>
+    <script src="/scripts/api/socketClient.js"></script>
+    <script src="/scripts/engine/audioEngine.js"></script>
+    <script src="/scripts/engine/lyricsEngine.js"></script>
+    <script src="/scripts/engine/stemLoader.js"></script>
+    <script src="/scripts/views/roomView.js"></script>
+    <script src="/scripts/views/searchView.js"></script>
+    <script src="/scripts/views/queueView.js"></script>
+    <script src="/scripts/views/mixerView.js"></script>
+    <script src="/scripts/app.js"></script>
+    <script>
+      // Wire up new header buttons
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('btn-open-tv')?.addEventListener('click', () => {
+          const code = App.roomCode;
+          if (code) window.open(`/tv/${code}`, '_blank');
+        });
+        document.getElementById('btn-share-link')?.addEventListener('click', () => {
+          const code = App.roomCode;
+          if (!code) return;
+          const url = `${window.location.origin}/join/${code}`;
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(() => {
+              const btn = document.getElementById('btn-share-link');
+              btn.textContent = 'Copied!';
+              setTimeout(() => btn.textContent = 'Share Link', 2000);
+            });
+          } else {
+            prompt('Share this link:', url);
+          }
+        });
+
+        // Wire mx-* buttons to mirror lo-* behavior
+        document.getElementById('mx-playpause')?.addEventListener('click', () => MixerView.togglePlayPause());
+        document.getElementById('mx-restart')?.addEventListener('click', () => MixerView.seek(0));
+        document.getElementById('mx-skip')?.addEventListener('click', () => WS.next());
+        document.getElementById('mx-sync-minus')?.addEventListener('click', () => MixerView._adjustLyricsOffset(-0.5));
+        document.getElementById('mx-sync-plus')?.addEventListener('click', () => MixerView._adjustLyricsOffset(0.5));
+        document.getElementById('mx-sync-reset')?.addEventListener('click', () => MixerView._resetLyricsOffset());
+        document.getElementById('mx-sync-auto')?.addEventListener('click', () => MixerView._autoSyncLyrics());
+        document.getElementById('mx-progress-wrap')?.addEventListener('click', (e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const pct = (e.clientX - rect.left) / rect.width;
+          MixerView.seek(pct * MixerView.duration);
+        });
+
+        // Lyrics toggle
+        document.getElementById('lyrics-toggle')?.addEventListener('click', function() {
+          this.classList.toggle('active');
+          if (this.classList.contains('active')) {
+            MixerView._showLyricsOverlay();
+          } else {
+            MixerView._hideLyricsOverlay();
+          }
+        });
+      });
+    </script>
 </body>
 </html>

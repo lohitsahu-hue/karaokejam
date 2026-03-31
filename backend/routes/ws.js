@@ -137,6 +137,20 @@ function setupSocketHandlers(io) {
       });
     });
 
+    // ── Stem mix from participants ──
+    socket.on('playback:stemMix', (data) => {
+      if (!currentRoomId) return;
+      // Forward stem mix request to host so it can adjust audio
+      const room = db.getRoom(currentRoomId);
+      if (!room || !room.hostId) return;
+      io.to(room.hostId).emit('playback:stemMix', {
+        fromGuest: currentGuestId,
+        leadVocals: data.leadVocals,
+        backingVocals: data.backingVocals,
+        music: data.music,
+      });
+    });
+
     // ── Next song ──
     socket.on('playback:next', () => {
       if (!currentRoomId || !isHost) return;

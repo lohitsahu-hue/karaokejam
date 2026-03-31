@@ -1,410 +1,1358 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>KaraokeJam — Join Party</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>KaraokeJam - Join Party</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background: #0f0f17;
-    color: #fff;
-    min-height: 100vh;
-    -webkit-tap-highlight-color: transparent;
-  }
+    :root {
+      --bg-dark: #0f0f17;
+      --bg-darker: #0a0a0f;
+      --accent-purple: #8b5cf6;
+      --accent-purple-light: #a78bfa;
+      --accent-pink: #ec4899;
+      --accent-pink-light: #f472b6;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a8;
+      --border-color: #2a2a3a;
+      --status-green: #10b981;
+      --status-amber: #f59e0b;
+      --status-red: #ef4444;
+      --safe-area-top: max(1rem, env(safe-area-inset-top));
+      --safe-area-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
 
-  /* ── Header ── */
-  .header {
-    padding: 16px 20px;
-    background: rgba(15,15,23,0.95);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    position: sticky; top: 0; z-index: 10;
-    backdrop-filter: blur(12px);
-  }
-  .header-top { display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-size: 18px; font-weight: 700; }
-  .logo span { color: #8b5cf6; }
-  .room-info { font-size: 12px; color: rgba(255,255,255,0.4); }
-  .user-badge {
-    font-size: 12px; color: #8b5cf6; background: rgba(139,92,246,0.12);
-    padding: 4px 10px; border-radius: 12px; font-weight: 600;
-  }
-</style>
-<style>
-  /* ── Name Entry ── */
-  .name-gate {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; min-height: 100vh; padding: 40px 24px; gap: 20px;
-  }
-  .name-gate h1 { font-size: 28px; font-weight: 700; }
-  .name-gate h1 span { color: #8b5cf6; }
-  .name-gate p { color: rgba(255,255,255,0.4); font-size: 14px; }
-  .name-input {
-    width: 100%; max-width: 300px; padding: 14px 18px;
-    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px; color: #fff; font-size: 16px; text-align: center;
-    outline: none; transition: border-color 0.2s;
-  }
-  .name-input:focus { border-color: #8b5cf6; }
-  .btn-join {
-    padding: 14px 40px; background: #8b5cf6; color: #fff;
-    border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
-    cursor: pointer; transition: opacity 0.2s;
-  }
-  .btn-join:active { opacity: 0.8; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      overflow: hidden;
+    }
 
-  /* ── Search ── */
-  .search-bar {
-    display: flex; gap: 8px; padding: 12px 20px;
-    background: rgba(15,15,23,0.95);
-    position: sticky; top: 60px; z-index: 9;
-  }
-  .search-input {
-    flex: 1; padding: 12px 16px;
-    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px; color: #fff; font-size: 15px; outline: none;
-  }
-  .search-input:focus { border-color: #8b5cf6; }
-  .btn-search {
-    padding: 12px 20px; background: #8b5cf6; color: #fff;
-    border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
-  }
-</style>
-<style>
-  /* ── Search Results ── */
-  .results { padding: 8px 20px; }
-  .result-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px; border-radius: 12px; margin-bottom: 6px;
-    background: rgba(255,255,255,0.03);
-    transition: background 0.2s; cursor: pointer;
-  }
-  .result-item:active { background: rgba(139,92,246,0.12); }
-  .ri-thumb { width: 56px; height: 42px; border-radius: 6px; object-fit: cover; }
-  .ri-info { flex: 1; min-width: 0; }
-  .ri-title { font-size: 14px; font-weight: 600; color: #f1f1f1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ri-artist { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
-  .ri-add {
-    padding: 8px 14px; background: rgba(139,92,246,0.15); color: #8b5cf6;
-    border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
-    white-space: nowrap;
-  }
-  .ri-add:active { background: rgba(139,92,246,0.3); }
-  .ri-add.added { background: rgba(52,211,153,0.12); color: #34d399; pointer-events: none; }
+    /* ==================== NAME GATE ==================== */
+    .name-gate {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      padding: 2rem 1.5rem;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+      gap: 2rem;
+    }
 
-  /* ── Tabs ── */
-  .tabs {
-    display: flex; border-bottom: 1px solid rgba(255,255,255,0.06);
-    padding: 0 20px; position: sticky; top: 60px; z-index: 8;
-    background: #0f0f17;
-  }
-  .tab {
-    flex: 1; padding: 12px 0; text-align: center;
-    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.35);
-    border-bottom: 2px solid transparent; cursor: pointer;
-    transition: all 0.2s;
-  }
-  .tab.active { color: #8b5cf6; border-bottom-color: #8b5cf6; }
-</style>
-<style>
-  /* ── Queue list ── */
-  .queue-section { padding: 12px 20px; }
-  .queue-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px; border-radius: 12px; margin-bottom: 6px;
-    background: rgba(255,255,255,0.03);
-  }
-  .queue-item.mine { border-left: 3px solid #8b5cf6; }
-  .queue-item.playing { background: rgba(236,72,153,0.08); border-left: 3px solid #ec4899; }
-  .qi-pos { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.2); width: 28px; text-align: center; }
-  .qi-thumb { width: 44px; height: 33px; border-radius: 6px; object-fit: cover; }
-  .qi-info { flex: 1; min-width: 0; }
-  .qi-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .qi-meta { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
-  .qi-you { font-size: 10px; color: #8b5cf6; font-weight: 700; }
-  .qi-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; }
-  .qi-status.playing { color: #ec4899; }
-  .qi-status.downloading { color: #fbbf24; }
-  .qi-status.ready { color: #34d399; }
+    .name-gate.hidden {
+      display: none;
+    }
 
-  /* ── Now playing mini bar ── */
-  .mini-player {
-    display: none; position: fixed; bottom: 0; left: 0; right: 0;
-    padding: 12px 20px; background: rgba(15,15,23,0.95);
-    border-top: 1px solid rgba(255,255,255,0.06);
-    backdrop-filter: blur(12px); z-index: 20;
-  }
-  .mini-player.visible { display: flex; align-items: center; gap: 12px; }
-  .mp-info { flex: 1; }
-  .mp-title { font-size: 13px; font-weight: 600; }
-  .mp-singer { font-size: 11px; color: rgba(255,255,255,0.4); }
-  .mp-badge { font-size: 10px; color: #ec4899; text-transform: uppercase; letter-spacing: 1px; }
+    .logo-large {
+      font-size: 3.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+    }
 
-  .view { display: none; }
-  .view.active { display: block; }
-  .empty-msg { text-align: center; color: rgba(255,255,255,0.2); padding: 40px 20px; font-size: 14px; }
-</style>
+    .gate-prompt {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .gate-form {
+      width: 100%;
+      max-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .input-field {
+      padding: 1rem;
+      background-color: var(--bg-darker);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.3s ease;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--accent-purple);
+    }
+
+    .input-field::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .btn-primary {
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+      box-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
+    }
+
+    /* ==================== MAIN PARTY VIEW ==================== */
+    .party-view {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-dark);
+    }
+
+    .party-view.active {
+      display: flex;
+    }
+
+    .sticky-header {
+      padding: var(--safe-area-top) 1.5rem 1rem;
+      background: rgba(15, 15, 23, 0.95);
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-small {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .user-badge {
+      background-color: var(--bg-darker);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+
+    .room-code {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      background-color: var(--bg-darker);
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* ==================== TABS ==================== */
+    .tab-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .tab-buttons {
+      display: flex;
+      gap: 0;
+      background-color: var(--bg-darker);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 1rem;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .tab-btn.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent-purple);
+    }
+
+    .tab-content {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
+      padding-bottom: var(--safe-area-bottom);
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    /* ==================== SEARCH TAB ==================== */
+    .search-section {
+      padding: 1rem 1.5rem;
+      gap: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background-color: var(--bg-darker);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: var(--accent-purple);
+    }
+
+    .search-bar button {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+      font-size: 0.9rem;
+    }
+
+    .search-bar button:active {
+      transform: scale(0.95);
+    }
+
+    .results-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0 1.5rem;
+      overflow-y: auto;
+    }
+
+    .song-card {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      background-color: var(--bg-darker);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      align-items: flex-start;
+      transition: border-color 0.3s ease;
+    }
+
+    .song-card:active {
+      border-color: var(--accent-purple);
+    }
+
+    .song-thumbnail {
+      width: 60px;
+      height: 60px;
+      background-color: var(--border-color);
+      border-radius: 8px;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    .song-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    .song-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-artist {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .add-btn {
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .add-btn:active {
+      transform: scale(0.95);
+    }
+
+    .add-btn.added {
+      background: var(--status-green);
+    }
+
+    /* ==================== QUEUE TAB ==================== */
+    .queue-section {
+      padding: 1rem 1.5rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-height: 0;
+    }
+
+    .queue-position-alert {
+      padding: 1rem;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid var(--accent-purple);
+      border-radius: 8px;
+      color: var(--accent-purple-light);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .queue-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .queue-item {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      background-color: var(--bg-darker);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      align-items: flex-start;
+    }
+
+    .queue-item.highlighted {
+      border-color: var(--accent-pink);
+      background: rgba(236, 72, 153, 0.05);
+    }
+
+    .queue-position {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      min-width: 30px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .queue-item.highlighted .queue-position {
+      color: var(--accent-pink);
+    }
+
+    .queue-item-thumbnail {
+      width: 60px;
+      height: 60px;
+      background-color: var(--border-color);
+      border-radius: 8px;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    .queue-item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    .queue-item-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-item-requester {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .you-badge {
+      display: inline-block;
+      background-color: var(--accent-pink);
+      color: white;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-left: 0.25rem;
+    }
+
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 0.35rem;
+    }
+
+    .status-playing {
+      background-color: var(--accent-pink);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .status-loading {
+      background-color: var(--status-amber);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    .status-ready {
+      background-color: var(--status-green);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* ==================== SINGER MODE ==================== */
+    .singer-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, var(--bg-darker) 0%, var(--bg-dark) 100%);
+      z-index: 100;
+      flex-direction: column;
+      padding: var(--safe-area-top) 0 var(--safe-area-bottom) 0;
+    }
+
+    .singer-overlay.active {
+      display: flex;
+    }
+
+    .singer-progress {
+      height: 3px;
+      background-color: var(--border-color);
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .singer-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .singer-header {
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .singer-title {
+      font-size: 1rem;
+      font-weight: 600;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .close-btn {
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .close-btn:active {
+      color: var(--text-primary);
+    }
+
+    .lyrics-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1.5rem;
+      gap: 2rem;
+      overflow-y: auto;
+      text-align: center;
+    }
+
+    .lyrics-display {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .lyric-line {
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      transition: all 0.3s ease;
+    }
+
+    .lyric-line.current {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .lyric-romanization {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+      opacity: 0.8;
+    }
+
+    .stem-controls {
+      padding: 2rem 1.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-top: 1px solid var(--border-color);
+      gap: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stem-control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .stem-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .stem-value {
+      color: var(--accent-purple-light);
+      font-weight: 600;
+    }
+
+    .stem-slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border-color);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .stem-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+    }
+
+    .stem-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+    }
+
+    /* ==================== MINI PLAYER ==================== */
+    .mini-player {
+      display: none;
+      position: fixed;
+      bottom: var(--safe-area-bottom);
+      left: 0;
+      right: 0;
+      padding: 1rem 1.5rem;
+      background: rgba(15, 15, 23, 0.95);
+      border-top: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      z-index: 50;
+    }
+
+    .mini-player.active {
+      display: block;
+    }
+
+    .mini-player-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .mini-player-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .mini-player-badge {
+      font-size: 0.7rem;
+      color: var(--accent-pink);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .mini-player-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mini-player-singer {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mini-player-icon {
+      color: var(--accent-purple);
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    /* ==================== LOADING & EMPTY STATES ==================== */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 0.95rem;
+    }
+
+    .loading-spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--accent-purple);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==================== SCROLLBAR ==================== */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-purple);
+    }
+  </style>
 </head>
 <body>
-
-<!-- Name gate -->
-<div id="view-name" class="view active">
-  <div class="name-gate">
-    <h1>Karaoke<span>Jam</span></h1>
-    <p>Enter your name to join the party</p>
-    <input type="text" class="name-input" id="name-input" placeholder="Your name" maxlength="20" autofocus>
-    <button class="btn-join" id="btn-join">Join Party</button>
+  <!-- NAME GATE -->
+  <div class="name-gate" id="nameGate">
+    <div class="logo-large">KaraokeJam</div>
+    <div class="gate-prompt">Enter your name to join</div>
+    <form class="gate-form" id="gateForm">
+      <input
+        type="text"
+        class="input-field"
+        id="nameInput"
+        placeholder="Your name"
+        autocomplete="off"
+        maxlength="30"
+      >
+      <button type="submit" class="btn-primary">Join Party</button>
+    </form>
   </div>
-</div>
 
-<!-- Main party view -->
-<div id="view-party" class="view">
-  <div class="header">
-    <div class="header-top">
-      <div class="logo">Karaoke<span>Jam</span></div>
-      <div class="user-badge" id="user-badge"></div>
+  <!-- PARTY VIEW -->
+  <div class="party-view" id="partyView">
+    <!-- Sticky Header -->
+    <div class="sticky-header">
+      <div class="logo-small">KaraokeJam</div>
+      <div style="flex: 1;"></div>
+      <div class="room-code" id="roomCodeDisplay">ROOM</div>
+      <div class="user-badge" id="userBadge">Guest</div>
     </div>
-    <div class="room-info" id="room-info"></div>
-  </div>
 
-  <div class="tabs">
-    <div class="tab active" data-tab="search">Search</div>
-    <div class="tab" data-tab="queue">Queue <span id="queue-count"></span></div>
-  </div>
-
-  <!-- Search tab -->
-  <div id="tab-search" class="view active">
-    <div class="search-bar">
-      <input type="text" class="search-input" id="search-input" placeholder="Search for a song...">
-      <button class="btn-search" id="btn-search">Search</button>
-    </div>
-    <div class="results" id="results"></div>
-  </div>
-
-  <!-- Queue tab -->
-  <div id="tab-queue" class="view">
-    <div class="queue-section" id="queue-list"></div>
-  </div>
-
-  <!-- Mini player -->
-  <div class="mini-player" id="mini-player">
-    <div class="mp-info">
-      <div class="mp-badge">Now Playing</div>
-      <div class="mp-title" id="mp-title"></div>
-      <div class="mp-singer" id="mp-singer"></div>
-    </div>
-  </div>
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
-<script>
-(function() {
-  'use strict';
-
-  const pathParts = window.location.pathname.split('/');
-  const roomCode = pathParts[2] || '';
-
-  let socket = null;
-  let roomId = null;
-  let guestId = null;
-  let userName = '';
-  let queue = [];
-  let currentSong = null;
-
-  // ── Tab switching ──
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      const name = tab.dataset.tab;
-      document.getElementById('tab-search').classList.toggle('active', name === 'search');
-      document.getElementById('tab-queue').classList.toggle('active', name === 'queue');
-    });
-  });
-
-  // ── Name gate ──
-  const savedName = localStorage.getItem('karaoke-name') || '';
-  document.getElementById('name-input').value = savedName;
-
-  document.getElementById('btn-join').addEventListener('click', joinParty);
-  document.getElementById('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') joinParty(); });
-
-  async function joinParty() {
-    userName = document.getElementById('name-input').value.trim();
-    if (!userName) { document.getElementById('name-input').focus(); return; }
-    localStorage.setItem('karaoke-name', userName);
-
-    if (!roomCode) { alert('No room code in URL'); return; }
-
-    const res = await fetch('/api/rooms/join', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: roomCode, guestName: userName }),
-    });
-    const data = await res.json();
-    if (data.error) { alert('Room not found'); return; }
-
-    roomId = data.roomId;
-    guestId = data.guestId;
-    queue = data.queue || [];
-
-    // Show party view
-    document.getElementById('view-name').classList.remove('active');
-    document.getElementById('view-party').classList.add('active');
-    document.getElementById('user-badge').textContent = userName;
-    document.getElementById('room-info').textContent = `Room: ${roomCode} · Host: ${data.hostName}`;
-
-    renderQueue();
-    connectSocket();
-  }
-
-  // ── WebSocket ──
-  function connectSocket() {
-    socket = io();
-    socket.emit('room:join', { roomId, guestId, guestName: userName, asHost: false });
-
-    socket.on('queue:updated', data => {
-      queue = data.queue || [];
-      renderQueue();
-      document.getElementById('queue-count').textContent = queue.filter(q => q.status !== 'played').length || '';
-    });
-
-    socket.on('playback:started', data => {
-      currentSong = data.currentSong;
-      showMiniPlayer(currentSong);
-      renderQueue();
-    });
-
-    socket.on('playback:nextSong', data => {
-      currentSong = data.currentSong;
-      queue = data.queue || [];
-      showMiniPlayer(currentSong);
-      renderQueue();
-    });
-
-    socket.on('playback:queueEmpty', () => {
-      currentSong = null;
-      document.getElementById('mini-player').classList.remove('visible');
-    });
-  }
-
-  // ── Search ──
-  document.getElementById('btn-search').addEventListener('click', doSearch);
-  document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
-
-  async function doSearch() {
-    const query = document.getElementById('search-input').value.trim();
-    if (!query) return;
-    document.getElementById('results').innerHTML = '<div class="empty-msg">Searching...</div>';
-
-    const res = await fetch('/api/search/youtube', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
-    });
-    const data = await res.json();
-    const results = data.results || [];
-
-    if (results.length === 0) {
-      document.getElementById('results').innerHTML = '<div class="empty-msg">No results found</div>';
-      return;
-    }
-
-    document.getElementById('results').innerHTML = results.map((r, i) => `
-      <div class="result-item" data-idx="${i}">
-        ${r.thumbnail ? `<img class="ri-thumb" src="${r.thumbnail}" alt="">` : ''}
-        <div class="ri-info">
-          <div class="ri-title">${r.title || ''}</div>
-          <div class="ri-artist">${r.artist || r.channelTitle || ''}</div>
-        </div>
-        <button class="ri-add" data-idx="${i}">+ Add</button>
+    <!-- Tab Container -->
+    <div class="tab-container">
+      <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="search">Search</button>
+        <button class="tab-btn" data-tab="queue">Queue</button>
       </div>
-    `).join('');
 
-    // Store results for add handler
-    window._searchResults = results;
+      <!-- Search Tab -->
+      <div class="tab-content active" id="searchTab">
+        <div class="search-section">
+          <div class="search-bar">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Song name, artist..."
+              autocomplete="off"
+            >
+            <button id="searchBtn">Search</button>
+          </div>
+        </div>
+        <div class="results-container" id="resultsContainer">
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <div class="empty-state-text">Search for songs to add to the queue</div>
+          </div>
+        </div>
+      </div>
 
-    // Add click handlers
-    document.querySelectorAll('.ri-add').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const idx = parseInt(btn.dataset.idx);
-        addToQueue(window._searchResults[idx], btn);
-      });
-    });
-  }
-
-  async function addToQueue(song, btn) {
-    if (!song || !roomId) return;
-    btn.textContent = 'Added';
-    btn.classList.add('added');
-
-    await fetch(`/api/rooms/${roomId}/queue`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        youtubeId: song.videoId || song.id,
-        title: song.title,
-        artist: song.artist || song.channelTitle || '',
-        thumbnail: song.thumbnail,
-        duration: song.duration || 0,
-        requestedBy: guestId,
-        requestedByName: userName,
-      }),
-    });
-
-    // Switch to queue tab
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelector('[data-tab="queue"]').classList.add('active');
-    document.getElementById('tab-search').classList.remove('active');
-    document.getElementById('tab-queue').classList.add('active');
-  }
-
-  // ── Queue Renderer ──
-  function renderQueue() {
-    const list = document.getElementById('queue-list');
-    const active = queue.filter(q => q.status !== 'played');
-
-    if (active.length === 0) {
-      list.innerHTML = '<div class="empty-msg">No songs yet — search and add one!</div>';
-      return;
-    }
-
-    list.innerHTML = active.map((item, i) => {
-      let cls = 'queue-item';
-      if (item.requestedBy === guestId) cls += ' mine';
-      if (item.status === 'playing') cls += ' playing';
-
-      const statusMap = { playing: '♪ Playing', downloading: 'Loading...', ready: 'Ready', error: 'Error' };
-      const statusText = statusMap[item.status] || '';
-      const statusCls = item.status || '';
-
-      return `
-        <div class="${cls}">
-          <div class="qi-pos">${i + 1}</div>
-          ${item.thumbnail ? `<img class="qi-thumb" src="${item.thumbnail}" alt="">` : ''}
-          <div class="qi-info">
-            <div class="qi-title">${item.title || 'Unknown'}</div>
-            <div class="qi-meta">
-              ${item.requestedByName || 'Guest'}
-              ${item.requestedBy === guestId ? '<span class="qi-you"> · You</span>' : ''}
+      <!-- Queue Tab -->
+      <div class="tab-content" id="queueTab">
+        <div class="queue-section">
+          <div id="queuePositionAlert" class="queue-position-alert" style="display: none;"></div>
+          <div class="queue-list" id="queueList">
+            <div class="empty-state">
+              <div class="empty-state-icon">🎶</div>
+              <div class="empty-state-text">Queue is empty</div>
             </div>
           </div>
-          ${statusText ? `<div class="qi-status ${statusCls}">${statusText}</div>` : ''}
-        </div>`;
-    }).join('');
-  }
+        </div>
+      </div>
+    </div>
+  </div>
 
-  function showMiniPlayer(song) {
-    if (!song) return;
-    document.getElementById('mini-player').classList.add('visible');
-    document.getElementById('mp-title').textContent = song.title || '';
-    document.getElementById('mp-singer').textContent = song.requestedByName || '';
-  }
-})();
-</script>
+  <!-- SINGER MODE OVERLAY -->
+  <div class="singer-overlay" id="singerOverlay">
+    <div class="singer-progress">
+      <div class="singer-progress-bar" id="singerProgressBar"></div>
+    </div>
+    <div class="singer-header">
+      <div class="singer-title" id="singerTitle">Now Singing</div>
+      <button class="close-btn" id="closeSignerBtn">✕</button>
+    </div>
+    <div class="lyrics-container">
+      <div class="lyrics-display" id="lyricsDisplay">
+        <div class="lyric-line">Loading lyrics...</div>
+      </div>
+    </div>
+    <div class="stem-controls">
+      <div class="stem-control">
+        <div class="stem-label">
+          <span>Lead Vocals</span>
+          <span class="stem-value" id="leadVocalsValue">100%</span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value="100"
+          class="stem-slider"
+          id="leadVocalsSlider"
+        >
+      </div>
+      <div class="stem-control">
+        <div class="stem-label">
+          <span>Backing Vocals</span>
+          <span class="stem-value" id="backingVocalsValue">100%</span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value="100"
+          class="stem-slider"
+          id="backingVocalsSlider"
+        >
+      </div>
+      <div class="stem-control">
+        <div class="stem-label">
+          <span>Music</span>
+          <span class="stem-value" id="musicValue">100%</span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value="100"
+          class="stem-slider"
+          id="musicSlider"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- MINI PLAYER -->
+  <div class="mini-player" id="miniPlayer">
+    <div class="mini-player-content">
+      <div class="mini-player-info">
+        <div class="mini-player-badge">Now Playing</div>
+        <div class="mini-player-title" id="miniPlayerTitle">Song Title</div>
+        <div class="mini-player-singer" id="miniPlayerSinger">Singer Name</div>
+      </div>
+      <div class="mini-player-icon">▶</div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/scripts/engine/lyricsEngine.js"></script>
+
+  <script>
+    // ==================== STATE ====================
+    const app = {
+      guestName: localStorage.getItem('karaoke-name') || '',
+      roomCode: '',
+      roomId: '',
+      socket: null,
+      currentPlayingSongId: null,
+      playbackStartedAt: 0,
+      isCurrentUser: false,
+      queue: [],
+      searchResults: [],
+      addedSongs: new Set(),
+      currentLyricsData: null,
+      currentLyricIndex: 0,
+      playingNow: false,
+      stemMixValues: { leadVocals: 100, backingVocals: 100, music: 100 }
+    };
+
+    // ==================== URL & INIT ====================
+    function initializeApp() {
+      const pathParts = window.location.pathname.split('/');
+      app.roomCode = pathParts[pathParts.length - 1] || 'UNKNOWN';
+      document.getElementById('roomCodeDisplay').textContent = app.roomCode.toUpperCase();
+
+      if (app.guestName) {
+        joinParty();
+      }
+    }
+
+    // ==================== NAME GATE ====================
+    document.getElementById('gateForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('nameInput').value.trim();
+      if (name.length > 0) {
+        app.guestName = name;
+        localStorage.setItem('karaoke-name', name);
+        joinParty();
+      }
+    });
+
+    async function joinParty() {
+      try {
+        const response = await fetch('/api/rooms/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: app.roomCode, guestName: app.guestName })
+        });
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        app.roomId = data.roomId;
+        app.guestId = data.guestId;
+
+        document.getElementById('nameGate').classList.add('hidden');
+        document.getElementById('partyView').classList.add('active');
+        document.getElementById('userBadge').textContent = app.guestName;
+
+        // Populate queue from join response
+        app.queue = data.queue || [];
+        updateQueueView();
+
+        connectSocket();
+      } catch (error) {
+        console.error('Failed to join party:', error);
+        alert('Failed to join party. Please try again.');
+      }
+    }
+
+    // ==================== SOCKET.IO ====================
+    function connectSocket() {
+      app.socket = io();
+
+      app.socket.on('connect', () => {
+        console.log('Connected to socket server');
+        // Join the room via WebSocket
+        app.socket.emit('room:join', {
+          roomId: app.roomId,
+          guestId: app.guestId,
+          guestName: app.guestName,
+          asHost: false
+        });
+      });
+
+      app.socket.on('room:state', (data) => {
+        const room = data.room || data;
+        app.queue = room.queue || [];
+        // Check if something is currently playing
+        const idx = room.currentQueueIdx || 0;
+        const playing = app.queue[idx];
+        if (playing && room.playback?.state === 'playing') {
+          app.currentPlayingSongId = playing.id || playing.songId;
+          app.playbackStartedAt = room.playback.startedAt || Date.now();
+          app.isCurrentUser = (playing.requestedBy === app.guestId);
+        }
+        updateQueueView();
+        updatePlayingState();
+      });
+
+      app.socket.on('queue:updated', (data) => {
+        app.queue = data.queue || data;
+        updateQueueView();
+      });
+
+      app.socket.on('playback:started', (data) => {
+        const song = data.currentSong;
+        if (!song) return;
+        app.currentPlayingSongId = song.id || song.songId;
+        app.playbackStartedAt = data.playback?.startedAt || Date.now();
+        app.isCurrentUser = (song.requestedBy === app.guestId);
+        updateQueueView();
+        updatePlayingState();
+        if (app.isCurrentUser) {
+          enterSingerMode(data);
+        }
+      });
+
+      app.socket.on('playback:paused', () => {
+        app.playingNow = false;
+        updateMiniPlayer();
+      });
+
+      app.socket.on('playback:seeked', (data) => {
+        app.playbackStartedAt = Date.now() - ((data.time || 0) * 1000);
+      });
+
+      app.socket.on('playback:controlUpdate', (data) => {
+        // Control updates (key/tempo) — no action needed on participant
+      });
+
+      app.socket.on('playback:nextSong', (data) => {
+        app.queue = data.queue || app.queue;
+        const song = data.currentSong;
+        if (song) {
+          app.currentPlayingSongId = song.id || song.songId;
+          app.isCurrentUser = (song.requestedBy === app.guestId);
+        } else {
+          app.currentPlayingSongId = null;
+          app.isCurrentUser = false;
+        }
+        closeSingerMode();
+        updateQueueView();
+        updatePlayingState();
+      });
+
+      app.socket.on('playback:queueEmpty', () => {
+        app.currentPlayingSongId = null;
+        app.isCurrentUser = false;
+        app.queue = [];
+        closeSingerMode();
+        updateQueueView();
+        updateMiniPlayer();
+      });
+    }
+
+    // ==================== TAB SWITCHING ====================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabName = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabName + 'Tab').classList.add('active');
+      });
+    });
+
+    // ==================== SEARCH ====================
+    document.getElementById('searchBtn').addEventListener('click', performSearch);
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') performSearch();
+    });
+
+    async function performSearch() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (query.length === 0) return;
+
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = '<div class="loading-spinner"></div>';
+
+      try {
+        const response = await fetch('/api/search/youtube', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        const results = await response.json();
+        app.searchResults = results.results || results.videos || [];
+        renderSearchResults();
+      } catch (error) {
+        console.error('Search failed:', error);
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-text">Search failed. Try again.</div></div>';
+      }
+    }
+
+    function renderSearchResults() {
+      const container = document.getElementById('resultsContainer');
+      if (app.searchResults.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-text">No results found</div></div>';
+        return;
+      }
+
+      container.innerHTML = app.searchResults.map((song, idx) => `
+        <div class="song-card">
+          <img src="${song.thumbnail || '/images/placeholder.png'}" alt="" class="song-thumbnail">
+          <div class="song-info">
+            <div class="song-title">${song.title}</div>
+            <div class="song-artist">${song.artist || 'Unknown'}</div>
+          </div>
+          <button
+            class="add-btn ${app.addedSongs.has(song.id) ? 'added' : ''}"
+            data-song-id="${song.id}"
+            data-song-title="${song.title}"
+            data-song-artist="${song.artist || 'Unknown'}"
+            data-song-thumbnail="${song.thumbnail || ''}"
+          >
+            ${app.addedSongs.has(song.id) ? 'Added ✓' : '+ Add'}
+          </button>
+        </div>
+      `).join('');
+
+      container.querySelectorAll('.add-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => addSongToQueue(e, btn));
+      });
+    }
+
+    async function addSongToQueue(e, btn) {
+      e.preventDefault();
+      const songId = btn.dataset.songId;
+      if (app.addedSongs.has(songId)) return;
+
+      try {
+        await fetch(`/api/rooms/${app.roomId}/queue`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            youtubeId: songId,
+            title: btn.dataset.songTitle,
+            artist: btn.dataset.songArtist,
+            thumbnail: btn.dataset.songThumbnail,
+            requestedBy: app.guestId,
+            requestedByName: app.guestName
+          })
+        });
+        app.addedSongs.add(songId);
+        btn.classList.add('added');
+        btn.textContent = 'Added ✓';
+      } catch (error) {
+        console.error('Failed to add song:', error);
+      }
+    }
+
+    // ==================== QUEUE VIEW ====================
+    function updateQueueView() {
+      const queueList = document.getElementById('queueList');
+      const alertDiv = document.getElementById('queuePositionAlert');
+
+      if (app.queue.length === 0) {
+        queueList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎶</div><div class="empty-state-text">Queue is empty</div></div>';
+        alertDiv.style.display = 'none';
+        return;
+      }
+
+      let userPosition = -1;
+      app.queue.forEach((song, idx) => {
+        if (song.requestedBy === app.guestName) userPosition = idx;
+      });
+
+      if (userPosition >= 0) {
+        const remaining = userPosition - (app.isCurrentUser && app.currentPlayingSongId ? 0 : 1);
+        alertDiv.style.display = 'block';
+        alertDiv.textContent = remaining <= 0 ? "You're up next!" : `You're up in ${remaining} song${remaining !== 1 ? 's' : ''}!`;
+      } else {
+        alertDiv.style.display = 'none';
+      }
+
+      queueList.innerHTML = app.queue.map((song, idx) => {
+        const songId = song.id || song.songId;
+        const isPlaying = songId === app.currentPlayingSongId || song.status === 'playing';
+        const isUserSong = song.requestedBy === app.guestId || song.requestedByName === app.guestName;
+        const status = isPlaying ? 'playing' : (song.status === 'downloading' ? 'loading' : 'ready');
+
+        return `
+          <div class="queue-item ${isUserSong ? 'highlighted' : ''}">
+            <div class="queue-position">${idx + 1}</div>
+            <img src="${song.thumbnail || '/images/placeholder.png'}" alt="" class="queue-item-thumbnail">
+            <div class="queue-item-info">
+              <div class="queue-item-title">
+                ${song.title}
+                ${isUserSong ? '<span class="you-badge">You</span>' : ''}
+              </div>
+              <div class="queue-item-requester">by ${song.requestedByName || song.requestedBy}</div>
+            </div>
+            <div class="status-indicator status-${status}"></div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== PLAYBACK STATE ====================
+    function updatePlayingState() {
+      document.querySelectorAll('.status-indicator').forEach(el => {
+        el.className = 'status-indicator';
+        if (el.closest('.queue-item')) {
+          const song = app.queue[Array.from(document.querySelectorAll('.queue-item')).indexOf(el.closest('.queue-item'))];
+          if (song && song.id === app.currentPlayingSongId) {
+            el.classList.add('status-playing');
+          } else if (song && song.status === 'loading') {
+            el.classList.add('status-loading');
+          } else {
+            el.classList.add('status-ready');
+          }
+        }
+      });
+      updateMiniPlayer();
+    }
+
+    function updateMiniPlayer() {
+      const song = app.queue.find(s => (s.id || s.songId) === app.currentPlayingSongId || s.status === 'playing');
+      if (song && !app.isCurrentUser) {
+        const miniPlayer = document.getElementById('miniPlayer');
+        document.getElementById('miniPlayerTitle').textContent = song.title;
+        document.getElementById('miniPlayerSinger').textContent = song.requestedByName || song.requestedBy;
+        miniPlayer.classList.add('active');
+        app.playingNow = true;
+        miniPlayer.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn')[1].click();
+        });
+      } else {
+        document.getElementById('miniPlayer').classList.remove('active');
+        app.playingNow = false;
+      }
+    }
+
+    // ==================== SINGER MODE ====================
+    function enterSingerMode(data) {
+      const overlay = document.getElementById('singerOverlay');
+      const title = document.getElementById('singerTitle');
+      const song = data.currentSong;
+
+      title.textContent = song ? song.title + (song.artist ? ' - ' + song.artist : '') : 'Now Singing';
+      overlay.classList.add('active');
+      app.currentLyricsData = null;
+      app.currentLyricIndex = 0;
+      app.playbackStartedAt = data.playback?.startedAt || Date.now();
+
+      // Use lyrics from queue item if available, otherwise fetch
+      if (song && song.lrcData) {
+        app.currentLyricsData = LyricsEngine.processLRC(song.lrcData);
+      } else {
+        fetchLyricsForSong(song?.title, song?.artist);
+      }
+
+      // Start playback tracking
+      updateSingerProgress();
+    }
+
+    function closeSingerMode() {
+      document.getElementById('singerOverlay').classList.remove('active');
+      document.getElementById('lyricsDisplay').innerHTML = '<div class="lyric-line">Ready for next song...</div>';
+    }
+
+    async function fetchLyricsForSong(title, artist) {
+      try {
+        const query = (title || '') + ' ' + (artist || '');
+        const response = await fetch('/api/search/lyrics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: query.trim() })
+        });
+        const data = await response.json();
+        if (data.lyrics) {
+          app.currentLyricsData = LyricsEngine.processLRC(data.lyrics);
+        } else {
+          app.currentLyricsData = null;
+        }
+        app.currentLyricIndex = 0;
+        updateLyricsDisplay();
+      } catch (error) {
+        console.error('Failed to fetch lyrics:', error);
+        document.getElementById('lyricsDisplay').innerHTML = '<div class="lyric-line">Lyrics not available</div>';
+      }
+    }
+
+    function updateLyricsDisplay() {
+      if (!app.currentLyricsData || !Array.isArray(app.currentLyricsData)) return;
+
+      const elapsed = (Date.now() - app.playbackStartedAt) / 1000;
+      const lineIndex = LyricsEngine.findLineIndex(app.currentLyricsData, elapsed);
+
+      if (lineIndex !== app.currentLyricIndex) {
+        app.currentLyricIndex = lineIndex;
+        const display = document.getElementById('lyricsDisplay');
+        const currentLine = app.currentLyricsData[lineIndex] || {};
+        const nextLine = app.currentLyricsData[lineIndex + 1] || {};
+
+        display.innerHTML = `
+          <div class="lyrics-display">
+            <div class="lyric-line">
+              <div class="lyric-line current">${currentLine.text || ''}</div>
+              ${currentLine.roman ? `<div class="lyric-romanization">${currentLine.roman}</div>` : ''}
+            </div>
+            <div class="lyric-line">
+              <div>${nextLine.text || ''}</div>
+              ${nextLine.roman ? `<div class="lyric-romanization">${nextLine.roman}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function updateSingerProgress() {
+      if (!app.isCurrentUser || !document.getElementById('singerOverlay').classList.contains('active')) return;
+
+      const elapsed = (Date.now() - app.playbackStartedAt) / 1000;
+      const progressPercent = Math.min((elapsed / 180) * 100, 100); // Assume 3-min song
+      document.getElementById('singerProgressBar').style.width = progressPercent + '%';
+      updateLyricsDisplay();
+
+      requestAnimationFrame(updateSingerProgress);
+    }
+
+    // ==================== STEM CONTROLS ====================
+    const sliders = ['leadVocalsSlider', 'backingVocalsSlider', 'musicSlider'];
+    const labels = ['leadVocalsValue', 'backingVocalsValue', 'musicValue'];
+    const keys = ['leadVocals', 'backingVocals', 'music'];
+
+    sliders.forEach((sliderId, idx) => {
+      document.getElementById(sliderId).addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        document.getElementById(labels[idx]).textContent = value + '%';
+        app.stemMixValues[keys[idx]] = value;
+
+        app.socket.emit('playback:stemMix', {
+          leadVocals: app.stemMixValues.leadVocals,
+          backingVocals: app.stemMixValues.backingVocals,
+          music: app.stemMixValues.music
+        });
+      });
+    });
+
+    document.getElementById('closeSignerBtn').addEventListener('click', closeSingerMode);
+
+    // ==================== INIT ====================
+    initializeApp();
+  </script>
 </body>
 </html>
