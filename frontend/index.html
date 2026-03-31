@@ -1234,6 +1234,8 @@
     <script src="/scripts/views/searchView.js"></script>
     <script src="/scripts/views/queueView.js"></script>
     <script src="/scripts/views/mixerView.js"></script>
+    <script src="/scripts/engine/micEngine.js"></script>
+    <script src="/scripts/engine/micReceiver.js"></script>
     <script src="/scripts/app.js"></script>
     <script>
       // Wire up new header buttons
@@ -1280,6 +1282,63 @@
             MixerView._hideLyricsOverlay();
           }
         });
+
+        // ── Live Mic Receiver (host side) ──
+        let micReceiverInited = false;
+        function initMicReceiverIfNeeded() {
+          if (micReceiverInited || !WS.socket || !MixerView.ctx) return;
+          micReceiverInited = true;
+
+          // Route mic audio into mixer's master gain
+          MicReceiver.init(WS.socket, MixerView.ctx, MixerView.masterGain);
+
+          MicReceiver.onMicConnected = (socketId, guestName, guestId) => {
+            console.log('[Host] Live mic connected:', guestName);
+            addMicFader(socketId, guestName);
+          };
+
+          MicReceiver.onMicDisconnected = (socketId, guestName, guestId) => {
+            console.log('[Host] Live mic disconnected:', guestName);
+            removeMicFader(socketId);
+          };
+        }
+
+        // Poll until MixerView.ctx is available (created on first song play)
+        const micInitInterval = setInterval(() => {
+          if (MixerView.ctx && WS.socket) {
+            initMicReceiverIfNeeded();
+            clearInterval(micInitInterval);
+          }
+        }, 500);
+
+        function addMicFader(socketId, guestName) {
+          const container = document.querySelector('.mixer-stems');
+          if (!container) return;
+          // Avoid duplicates
+          if (document.getElementById('mic-fader-' + socketId)) return;
+
+          const row = document.createElement('div');
+          row.className = 'mixer-stem-row';
+          row.id = 'mic-fader-' + socketId;
+          row.dataset.mic = socketId;
+          row.innerHTML = `
+            <span class="stem-label" style="color:#ef4444">🔴 ${guestName}</span>
+            <input type="range" min="0" max="100" value="80" class="stem-slider" data-mic="${socketId}">
+            <span class="stem-vol-label">80%</span>
+          `;
+          container.appendChild(row);
+
+          const slider = row.querySelector('input[type="range"]');
+          slider.addEventListener('input', () => {
+            MicReceiver.setMicVolume(socketId, slider.value / 100);
+            slider.nextElementSibling.textContent = slider.value + '%';
+          });
+        }
+
+        function removeMicFader(socketId) {
+          const el = document.getElementById('mic-fader-' + socketId);
+          if (el) el.remove();
+        }
       });
     </script>
 </body>

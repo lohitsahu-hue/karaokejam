@@ -648,6 +648,105 @@
       box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
     }
 
+    /* ==================== LIVE MIC ==================== */
+    .mic-section {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(167, 139, 250, 0.15);
+    }
+
+    .mic-btn {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid rgba(167, 139, 250, 0.4);
+      border-radius: 12px;
+      background: rgba(124, 58, 237, 0.15);
+      color: #e5e7eb;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .mic-btn:active {
+      transform: scale(0.97);
+    }
+
+    .mic-btn.live {
+      background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+      border-color: transparent;
+      color: #fff;
+      animation: micPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+      50% { box-shadow: 0 0 20px 8px rgba(124, 58, 237, 0.2); }
+    }
+
+    .mic-controls {
+      margin-top: 12px;
+    }
+
+    .mic-control-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .mic-label {
+      font-size: 12px;
+      color: #9ca3af;
+      min-width: 56px;
+    }
+
+    .mic-slider {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      background: rgba(167, 139, 250, 0.2);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .mic-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-purple);
+      cursor: pointer;
+    }
+
+    .mic-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #9ca3af;
+      cursor: pointer;
+    }
+
+    .mic-toggle-label input[type="checkbox"] {
+      accent-color: var(--accent-purple);
+    }
+
+    .mic-level-bar {
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .mic-level-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+      transition: width 0.05s linear;
+      border-radius: 2px;
+    }
+
     /* ==================== MINI PLAYER ==================== */
     .mini-player {
       display: none;
@@ -893,6 +992,29 @@
         >
       </div>
     </div>
+    <!-- Live Mic Section -->
+    <div class="mic-section">
+      <button class="mic-btn" id="goLiveBtn">🎤 Go Live</button>
+      <div class="mic-controls" id="micControls" style="display:none">
+        <div class="mic-control-row">
+          <span class="mic-label">Monitor</span>
+          <input type="range" min="0" max="100" value="0" class="mic-slider" id="micMonitorSlider">
+        </div>
+        <div class="mic-control-row">
+          <span class="mic-label">Reverb</span>
+          <input type="range" min="0" max="50" value="15" class="mic-slider" id="micReverbSlider">
+        </div>
+        <div class="mic-control-row">
+          <label class="mic-toggle-label">
+            <input type="checkbox" id="micEnhanceToggle" checked>
+            <span>Studio Enhancement</span>
+          </label>
+        </div>
+        <div class="mic-level-bar" id="micLevelBar">
+          <div class="mic-level-fill" id="micLevelFill"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- MINI PLAYER -->
@@ -909,6 +1031,7 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/scripts/engine/lyricsEngine.js"></script>
+  <script src="/scripts/engine/micEngine.js"></script>
 
   <script>
     // ==================== STATE ====================
@@ -1350,6 +1473,69 @@
     });
 
     document.getElementById('closeSignerBtn').addEventListener('click', closeSingerMode);
+
+    // ==================== LIVE MIC ====================
+    const goLiveBtn = document.getElementById('goLiveBtn');
+    const micControls = document.getElementById('micControls');
+    const micMonitorSlider = document.getElementById('micMonitorSlider');
+    const micReverbSlider = document.getElementById('micReverbSlider');
+    const micEnhanceToggle = document.getElementById('micEnhanceToggle');
+    const micLevelFill = document.getElementById('micLevelFill');
+
+    goLiveBtn.addEventListener('click', async () => {
+      if (MicEngine.state === 'off') {
+        try {
+          MicEngine.init(app.socket);
+          await MicEngine.startMic();
+          await MicEngine.connectToHost();
+          micControls.style.display = 'block';
+        } catch (err) {
+          alert('Could not access microphone. Please allow mic access and try again.');
+        }
+      } else {
+        MicEngine.stopMic();
+        micControls.style.display = 'none';
+      }
+    });
+
+    MicEngine.onStateChange = (newState) => {
+      switch (newState) {
+        case 'off':
+          goLiveBtn.textContent = '🎤 Go Live';
+          goLiveBtn.classList.remove('live');
+          break;
+        case 'local':
+          goLiveBtn.textContent = '🎤 Connecting...';
+          goLiveBtn.classList.remove('live');
+          break;
+        case 'connecting':
+          goLiveBtn.textContent = '🎤 Connecting...';
+          goLiveBtn.classList.remove('live');
+          break;
+        case 'live':
+          goLiveBtn.textContent = '🔴 LIVE — Tap to Stop';
+          goLiveBtn.classList.add('live');
+          break;
+      }
+    };
+
+    MicEngine.onLevelChange = (level) => {
+      if (micLevelFill) {
+        micLevelFill.style.width = (level * 100) + '%';
+      }
+    };
+
+    micMonitorSlider.addEventListener('input', () => {
+      MicEngine.setMonitorVolume(micMonitorSlider.value / 100);
+    });
+
+    micReverbSlider.addEventListener('input', () => {
+      MicEngine.setReverbMix(micReverbSlider.value / 100);
+    });
+
+    micEnhanceToggle.addEventListener('change', () => {
+      MicEngine.setEnhancement(micEnhanceToggle.checked);
+    });
 
     // ==================== INIT ====================
     initializeApp();

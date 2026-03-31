@@ -185,6 +185,57 @@ function setupSocketHandlers(io) {
       }
     });
 
+    // ── Live Mic WebRTC signaling ──
+    socket.on('mic:offer', ({ offer, targetSocketId }) => {
+      if (!currentRoomId) return;
+      const room = db.getRoom(currentRoomId);
+      if (!room || !room.hostId) return;
+      const guest = room.guests.find(g => g.id === currentGuestId);
+      const guestName = guest ? guest.name : 'Guest';
+      // Forward offer to host
+      io.to(room.hostId).emit('mic:offer', {
+        offer,
+        fromSocketId: socket.id,
+        guestName,
+        guestId: currentGuestId,
+      });
+    });
+
+    socket.on('mic:answer', ({ answer, targetSocketId }) => {
+      if (!currentRoomId || !isHost) return;
+      // Forward answer from host to the singer
+      io.to(targetSocketId).emit('mic:answer', { answer });
+    });
+
+    socket.on('mic:ice-candidate', ({ candidate, targetSocketId }) => {
+      if (!currentRoomId) return;
+      if (targetSocketId === '_host_') {
+        // Singer → Host
+        const room = db.getRoom(currentRoomId);
+        if (room && room.hostId) {
+          io.to(room.hostId).emit('mic:ice-candidate', {
+            candidate,
+            fromSocketId: socket.id,
+          });
+        }
+      } else {
+        // Host → Singer
+        io.to(targetSocketId).emit('mic:ice-candidate', { candidate });
+      }
+    });
+
+    socket.on('mic:stop', () => {
+      if (!currentRoomId) return;
+      const room = db.getRoom(currentRoomId);
+      if (!room || !room.hostId) return;
+      const guest = room.guests.find(g => g.id === currentGuestId);
+      io.to(room.hostId).emit('mic:stopped', {
+        socketId: socket.id,
+        guestName: guest ? guest.name : 'Guest',
+        guestId: currentGuestId,
+      });
+    });
+
     // ── Disconnect ──
     socket.on('disconnect', () => {
       if (currentRoomId) {
