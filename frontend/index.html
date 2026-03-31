@@ -840,7 +840,8 @@
             backdrop-filter: blur(10px);
         }
 
-        .lyrics-overlay.active {
+        .lyrics-overlay.active,
+        .lyrics-overlay.show {
             display: flex;
         }
 
@@ -1051,7 +1052,7 @@
             </div>
         </div>
 
-        <div class="now-playing-bar">
+        <div class="now-playing-bar" id="now-playing">
             <div class="np-info">
                 <div id="np-title">Select a song to play</div>
                 <div id="np-artist">No song selected</div>
@@ -1213,6 +1214,7 @@
             <div class="lyrics-controls">
                 <button class="lyrics-btn" id="lo-sync-minus">-0.5s</button>
                 <button class="lyrics-btn" id="lo-playpause">Play/Pause</button>
+                <button class="lyrics-btn" id="lo-restart">Restart</button>
                 <button class="lyrics-btn" id="lo-skip">Skip</button>
                 <button class="lyrics-btn" id="lo-sync-plus">+0.5s</button>
                 <button class="lyrics-btn" id="lo-sync-auto">Auto-sync</button>
