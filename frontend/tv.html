@@ -192,6 +192,8 @@
             color: var(--neon-purple);
             text-align: center;
             font-weight: 600;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .lyric-line {
@@ -439,109 +441,119 @@
 
         /* Mobile Responsive - < 768px */
         @media (max-width: 768px) {
-            /* Container layout: stack vertically */
+            /* Body overflow and layout */
+            body {
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
             .container {
                 flex-direction: column;
-                padding: 16px;
-                gap: 12px;
-            }
-
-            /* Main content: take full width */
-            .main-content {
-                flex: 1;
-                gap: 12px;
-            }
-
-            /* Queue sidebar: full width, smaller height */
-            .queue-sidebar {
-                flex: 0 0 auto;
-                max-height: 35vh;
-                min-height: 120px;
-            }
-
-            /* Now Playing bar: compact */
-            .now-playing {
-                min-height: auto;
                 padding: 12px;
-                gap: 12px;
+                gap: 8px;
             }
 
-            .thumbnail {
-                width: 50px;
-                height: 50px;
-                font-size: 24px;
-                flex-shrink: 0;
+            .main-content {
+                flex: none;
+                width: 100%;
             }
 
-            .now-playing-title {
+            .queue-sidebar {
+                flex: none;
+                width: 100%;
+                max-height: 30vh;
+                min-height: 100px;
+                border-radius: 8px;
+            }
+
+            /* Lyrics section: scale down aggressively */
+            .lyrics-section {
+                padding: 12px;
+            }
+
+            .lyric-current {
+                font-size: clamp(18px, 5vw, 48px);
+                line-height: 1.2;
+            }
+
+            .lyric-next {
                 font-size: 14px;
             }
 
-            .now-playing-artist {
+            .lyric-previous {
                 font-size: 12px;
             }
 
-            .now-playing-requester {
-                font-size: 11px;
-            }
-
-            /* Lyrics section: reduced padding and font sizes */
-            .lyrics-section {
-                padding: 16px;
-                gap: 12px;
+            .lyric-roman {
+                font-size: 10px;
+                margin-top: 2px;
             }
 
             .logo {
-                font-size: 36px;
+                font-size: clamp(28px, 8vw, 64px);
             }
 
             .join-message {
                 font-size: 14px;
                 word-break: break-word;
+                overflow-wrap: break-word;
             }
 
-            .lyric-current {
-                font-size: 24px;
+            /* Now playing bar */
+            .now-playing {
+                padding: 10px;
+                gap: 10px;
+                min-height: auto;
             }
 
-            .lyric-next {
-                font-size: 16px;
+            .thumbnail {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                border-radius: 6px;
             }
 
-            .lyric-previous {
-                font-size: 14px;
+            .now-playing-title {
+                font-size: 13px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
-            .lyric-roman {
-                font-size: 12px;
-                margin-top: 4px;
+            .now-playing-artist {
+                font-size: 11px;
             }
 
-            /* Queue header and items */
+            .now-playing-requester {
+                font-size: 10px;
+            }
+
+            /* Queue sidebar */
             .queue-header {
-                padding: 12px;
-                font-size: 14px;
+                padding: 10px;
+                font-size: 13px;
             }
 
             .queue-list {
                 padding: 8px;
-                gap: 6px;
+                gap: 4px;
+                -webkit-overflow-scrolling: touch;
             }
 
             .queue-item {
                 padding: 8px;
-                gap: 8px;
-            }
-
-            .queue-position {
-                font-size: 16px;
-                min-width: 24px;
+                gap: 6px;
             }
 
             .queue-thumbnail {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+
+            .queue-position {
+                font-size: 14px;
+                min-width: 24px;
             }
 
             .queue-song-title {
@@ -554,39 +566,52 @@
 
             .queue-status {
                 font-size: 9px;
-                padding: 3px 6px;
+                padding: 2px 6px;
             }
 
-            /* Up Next transition screen: smaller font sizes */
+            /* Up next screen */
             .up-next-label {
-                font-size: 32px;
+                font-size: 28px;
                 letter-spacing: 2px;
             }
 
             .up-next-singer {
-                font-size: 28px;
+                font-size: 24px;
+                max-width: 90vw;
+                word-wrap: break-word;
+                text-align: center;
             }
 
             .up-next-song {
-                font-size: 20px;
+                font-size: 18px;
+                max-width: 90vw;
+                word-wrap: break-word;
+                text-align: center;
             }
 
-            /* Background orbs: reduce size */
+            .up-next-screen {
+                gap: 24px;
+                padding: 20px;
+            }
+
+            /* Background orbs — reduce size and disable animation */
             .orb-purple {
-                width: 200px;
-                height: 200px;
+                width: 150px;
+                height: 150px;
+                animation: none;
             }
 
             .orb-pink {
-                width: 250px;
-                height: 250px;
+                width: 180px;
+                height: 180px;
+                animation: none;
             }
 
-            /* Room badge: adjust positioning for mobile */
+            /* Room badge */
             .room-badge {
-                bottom: 10px;
-                left: 10px;
-                padding: 10px 12px;
+                bottom: max(8px, env(safe-area-inset-bottom));
+                left: max(8px, env(safe-area-inset-left));
+                padding: 8px 12px;
                 font-size: 11px;
             }
         }

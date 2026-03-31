@@ -983,15 +983,21 @@
 
         /* ===== MOBILE RESPONSIVE (< 768px) ===== */
         @media (max-width: 768px) {
+            /* ===== BODY & OVERFLOW ===== */
+            body {
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+
             /* ===== LANDING VIEW ===== */
             .landing-card {
-                padding: 32px 20px;
+                padding: 24px 16px;
                 max-width: 90vw;
                 width: 100%;
             }
 
             .karaoke-logo h1 {
-                font-size: 36px;
+                font-size: clamp(28px, 8vw, 48px);
             }
 
             .landing-card h2 {
@@ -1001,8 +1007,8 @@
             /* ===== ROOM HEADER ===== */
             .room-header {
                 flex-wrap: wrap;
-                padding: 16px 12px;
-                gap: 12px;
+                padding: 12px;
+                gap: 8px;
             }
 
             .room-code-section {
@@ -1013,13 +1019,13 @@
             #room-code-display {
                 font-size: 22px;
                 letter-spacing: 1px;
+                padding: 4px 8px;
             }
 
             .room-info {
-                flex: 1 1 auto;
+                flex: 0 0 100%;
                 gap: 16px;
                 order: 2;
-                min-width: 0;
             }
 
             .host-info h3, .guests-info h3 {
@@ -1031,7 +1037,7 @@
             }
 
             .room-actions {
-                flex: 0 0 auto;
+                flex: 0 0 100%;
                 order: 3;
                 width: 100%;
                 gap: 8px;
@@ -1039,23 +1045,25 @@
 
             .header-btn {
                 flex: 1;
-                padding: 8px 12px;
+                padding: 10px 14px;
                 font-size: 12px;
+                min-height: 44px;
             }
 
             /* ===== ROOM CONTENT ===== */
             .room-content {
                 flex-direction: column;
                 overflow-y: auto;
+                height: calc(100vh - 160px);
             }
 
             .search-panel {
-                flex: 0 0 auto;
+                flex: none;
                 width: 100%;
+                max-height: 50vh;
                 border-right: none;
-                border-bottom: 2px solid rgba(167, 139, 250, 0.2);
+                border-bottom: 1px solid rgba(167, 139, 250, 0.2);
                 padding: 16px;
-                min-height: auto;
             }
 
             .search-header h2 {
@@ -1068,25 +1076,38 @@
                 padding: 8px 12px;
             }
 
+            .search-controls {
+                flex-wrap: wrap;
+            }
+
             #btn-search {
-                padding: 8px 16px;
+                width: 100%;
+                padding: 10px 14px;
                 font-size: 12px;
             }
 
+            #search-results {
+                max-height: 40vh;
+            }
+
             .queue-panel {
-                flex: 0 0 auto;
+                flex: none;
                 width: 100%;
+                max-height: 50vh;
                 padding: 16px;
-                min-height: auto;
             }
 
             .queue-header h2 {
                 font-size: 15px;
             }
 
+            #queue-list {
+                max-height: 40vh;
+            }
+
             /* ===== MIXER VIEW ===== */
             .mixer-header {
-                padding: 16px 12px;
+                padding: 12px 16px;
                 flex-wrap: wrap;
             }
 
@@ -1123,19 +1144,28 @@
             }
 
             .mixer-btn {
-                padding: 8px;
+                padding: 10px;
                 font-size: 12px;
+                min-height: 44px;
             }
 
             /* ===== NOW PLAYING BAR ===== */
             .now-playing-bar {
-                padding: 12px 16px;
-                gap: 12px;
                 flex-wrap: wrap;
+                padding: 12px 16px;
+                gap: 8px;
+            }
+
+            .np-info {
+                min-width: 0;
+                flex: 1 1 100%;
             }
 
             #np-title {
                 font-size: 13px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             #np-artist {
@@ -1143,17 +1173,18 @@
             }
 
             .np-controls {
+                flex: 1 1 100%;
                 gap: 8px;
-                width: 100%;
             }
 
             .np-btn {
                 flex: 1;
-                padding: 6px 12px;
+                padding: 10px 14px;
                 font-size: 12px;
+                min-height: 44px;
             }
 
-            /* ===== GENERAL ===== */
+            /* ===== SEARCH & QUEUE ITEMS ===== */
             .search-result-item {
                 padding: 10px;
             }
@@ -1176,7 +1207,7 @@
             }
 
             .queue-artist {
-                font-size: 10px;
+                font-size: 12px;
             }
 
             .queue-status {
@@ -1185,10 +1216,12 @@
             }
 
             .queue-btn {
-                padding: 3px 6px;
-                font-size: 10px;
+                padding: 6px 10px;
+                font-size: 11px;
+                min-height: 32px;
             }
 
+            /* ===== GENERAL ===== */
             input[type="text"], input[type="number"] {
                 padding: 10px 14px;
                 font-size: 13px;
@@ -1209,6 +1242,21 @@
 
             #btn-join-room {
                 flex: 0 0 60px;
+            }
+        }
+
+        /* ===== EXTRA SMALL PHONES (< 400px) ===== */
+        @media (max-width: 400px) {
+            .landing-card {
+                padding: 16px 12px;
+            }
+
+            .mixer-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .room-header {
+                padding: 8px;
             }
         }
     </style>

@@ -648,33 +648,37 @@
       box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
     }
 
-    /* ==================== LIVE MIC ==================== */
-    .mic-section {
-      padding: 16px 20px;
-      border-top: 1px solid rgba(167, 139, 250, 0.15);
+    /* ==================== FLOATING MIC FAB ==================== */
+    .mic-fab {
+      position: fixed;
+      bottom: calc(var(--safe-area-bottom) + 80px);
+      right: 16px;
+      z-index: 50;
+      display: none;
     }
 
-    .mic-btn {
-      width: 100%;
-      padding: 14px;
+    .mic-fab.visible {
+      display: block;
+    }
+
+    .mic-fab-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
       border: 2px solid rgba(167, 139, 250, 0.4);
-      border-radius: 12px;
-      background: rgba(124, 58, 237, 0.15);
-      color: #e5e7eb;
-      font-size: 16px;
-      font-weight: 600;
+      background: rgba(15, 15, 23, 0.95);
+      font-size: 24px;
       cursor: pointer;
+      box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
       transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .mic-btn:active {
-      transform: scale(0.97);
-    }
-
-    .mic-btn.live {
+    .mic-fab-btn.live {
       background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
       border-color: transparent;
-      color: #fff;
       animation: micPulse 2s ease-in-out infinite;
     }
 
@@ -683,15 +687,100 @@
       50% { box-shadow: 0 0 20px 8px rgba(124, 58, 237, 0.2); }
     }
 
+    /* MIC DRAWER */
+    .mic-drawer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 15, 23, 0.98);
+      border-top: 2px solid rgba(167, 139, 250, 0.3);
+      border-radius: 16px 16px 0 0;
+      padding: 16px 20px calc(var(--safe-area-bottom) + 12px);
+      z-index: 60;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      backdrop-filter: blur(20px);
+    }
+
+    .mic-drawer.open {
+      transform: translateY(0);
+    }
+
+    .mic-drawer-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .mic-drawer-title {
+      font-weight: 600;
+      font-size: 16px;
+      color: #e5e7eb;
+      flex: 1;
+    }
+
+    .mic-state-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+      color: #9ca3af;
+      letter-spacing: 1px;
+    }
+
+    .mic-state-badge.live {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+
+    .mic-drawer-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: #9ca3af;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mic-go-live-btn {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid rgba(167, 139, 250, 0.4);
+      border-radius: 12px;
+      background: rgba(124, 58, 237, 0.15);
+      color: #e5e7eb;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 12px;
+    }
+
+    .mic-go-live-btn.live {
+      background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+      border-color: transparent;
+      color: #fff;
+    }
+
     .mic-controls {
-      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .mic-control-row {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 10px;
     }
 
     .mic-label {
@@ -711,8 +800,8 @@
 
     .mic-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       background: var(--accent-purple);
       cursor: pointer;
@@ -722,13 +811,15 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
+      font-size: 14px;
       color: #9ca3af;
       cursor: pointer;
     }
 
     .mic-toggle-label input[type="checkbox"] {
       accent-color: var(--accent-purple);
+      width: 18px;
+      height: 18px;
     }
 
     .mic-level-bar {
@@ -736,7 +827,7 @@
       background: rgba(255,255,255,0.1);
       border-radius: 2px;
       overflow: hidden;
-      margin-top: 8px;
+      margin-top: 4px;
     }
 
     .mic-level-fill {
@@ -976,11 +1067,17 @@
         gap: 0.4rem;
       }
 
-      .mic-section {
-        padding: 12px 16px;
+      .mic-fab {
+        bottom: calc(var(--safe-area-bottom) + 60px);
       }
 
-      .mic-btn {
+      .mic-fab-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+      }
+
+      .mic-go-live-btn {
         padding: 12px;
         font-size: 14px;
       }
@@ -992,6 +1089,11 @@
 
       .mic-toggle-label {
         font-size: 12px;
+        min-height: 40px;
+      }
+
+      .singer-progress {
+        height: 4px;
       }
 
       .singer-header {
@@ -1183,29 +1285,6 @@
         >
       </div>
     </div>
-    <!-- Live Mic Section -->
-    <div class="mic-section">
-      <button class="mic-btn" id="goLiveBtn">🎤 Go Live</button>
-      <div class="mic-controls" id="micControls" style="display:none">
-        <div class="mic-control-row">
-          <span class="mic-label">Monitor</span>
-          <input type="range" min="0" max="100" value="0" class="mic-slider" id="micMonitorSlider">
-        </div>
-        <div class="mic-control-row">
-          <span class="mic-label">Reverb</span>
-          <input type="range" min="0" max="50" value="15" class="mic-slider" id="micReverbSlider">
-        </div>
-        <div class="mic-control-row">
-          <label class="mic-toggle-label">
-            <input type="checkbox" id="micEnhanceToggle" checked>
-            <span>Studio Enhancement</span>
-          </label>
-        </div>
-        <div class="mic-level-bar" id="micLevelBar">
-          <div class="mic-level-fill" id="micLevelFill"></div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- MINI PLAYER -->
@@ -1217,6 +1296,40 @@
         <div class="mini-player-singer" id="miniPlayerSinger">Singer Name</div>
       </div>
       <div class="mini-player-icon">▶</div>
+    </div>
+  </div>
+
+  <!-- FLOATING MIC BUTTON -->
+  <div class="mic-fab" id="micFab">
+    <button class="mic-fab-btn" id="micFabBtn">🎤</button>
+  </div>
+
+  <!-- MIC CONTROL DRAWER -->
+  <div class="mic-drawer" id="micDrawer">
+    <div class="mic-drawer-header">
+      <span class="mic-drawer-title">Live Mic</span>
+      <span class="mic-state-badge" id="micStateBadge">OFF</span>
+      <button class="mic-drawer-close" id="micDrawerClose">✕</button>
+    </div>
+    <button class="mic-go-live-btn" id="micGoLiveBtn">🎤 Go Live</button>
+    <div class="mic-controls" id="micControls" style="display:none">
+      <div class="mic-control-row">
+        <span class="mic-label">Monitor</span>
+        <input type="range" min="0" max="100" value="0" class="mic-slider" id="micMonitorSlider">
+      </div>
+      <div class="mic-control-row">
+        <span class="mic-label">Reverb</span>
+        <input type="range" min="0" max="50" value="15" class="mic-slider" id="micReverbSlider">
+      </div>
+      <div class="mic-control-row">
+        <label class="mic-toggle-label">
+          <input type="checkbox" id="micEnhanceToggle" checked>
+          <span>Studio Enhancement</span>
+        </label>
+      </div>
+      <div class="mic-level-bar" id="micLevelBar">
+        <div class="mic-level-fill" id="micLevelFill"></div>
+      </div>
     </div>
   </div>
 
@@ -1665,68 +1778,128 @@
 
     document.getElementById('closeSignerBtn').addEventListener('click', closeSingerMode);
 
-    // ==================== LIVE MIC ====================
-    const goLiveBtn = document.getElementById('goLiveBtn');
+    // ==================== FLOATING MIC ====================
+    const micFab = document.getElementById('micFab');
+    const micFabBtn = document.getElementById('micFabBtn');
+    const micDrawer = document.getElementById('micDrawer');
+    const micDrawerClose = document.getElementById('micDrawerClose');
+    const micGoLiveBtn = document.getElementById('micGoLiveBtn');
     const micControls = document.getElementById('micControls');
     const micMonitorSlider = document.getElementById('micMonitorSlider');
     const micReverbSlider = document.getElementById('micReverbSlider');
     const micEnhanceToggle = document.getElementById('micEnhanceToggle');
     const micLevelFill = document.getElementById('micLevelFill');
+    const micStateBadge = document.getElementById('micStateBadge');
 
-    goLiveBtn.addEventListener('click', async () => {
-      if (MicEngine.state === 'off') {
-        try {
-          MicEngine.init(app.socket);
-          await MicEngine.startMic();
-          await MicEngine.connectToHost();
-          micControls.style.display = 'block';
-        } catch (err) {
-          alert('Could not access microphone. Please allow mic access and try again.');
+    // Show mic FAB when user joins
+    const originalConnectSocket = window.connectSocket;
+    window.connectSocket = function(roomId) {
+      if (originalConnectSocket) {
+        originalConnectSocket.call(this, roomId);
+      }
+      if (micFab) {
+        micFab.classList.add('visible');
+      }
+    };
+
+    // FAB button click - open drawer
+    if (micFabBtn) {
+      micFabBtn.addEventListener('click', () => {
+        micDrawer.classList.add('open');
+        micFab.style.display = 'none';
+      });
+    }
+
+    // Close button - close drawer
+    if (micDrawerClose) {
+      micDrawerClose.addEventListener('click', () => {
+        micDrawer.classList.remove('open');
+        micFab.style.display = 'block';
+      });
+    }
+
+    // Go Live button - toggle mic
+    if (micGoLiveBtn) {
+      micGoLiveBtn.addEventListener('click', async () => {
+        if (typeof MicEngine === 'undefined') return;
+
+        if (MicEngine.state === 'off') {
+          try {
+            MicEngine.init(app.socket);
+            await MicEngine.startMic();
+            await MicEngine.connectToHost();
+            micControls.style.display = 'block';
+          } catch (err) {
+            alert('Could not access microphone. Please allow mic access and try again.');
+          }
+        } else {
+          MicEngine.stopMic();
+          micControls.style.display = 'none';
         }
-      } else {
-        MicEngine.stopMic();
-        micControls.style.display = 'none';
-      }
-    });
+      });
+    }
 
-    MicEngine.onStateChange = (newState) => {
-      switch (newState) {
-        case 'off':
-          goLiveBtn.textContent = '🎤 Go Live';
-          goLiveBtn.classList.remove('live');
-          break;
-        case 'local':
-          goLiveBtn.textContent = '🎤 Connecting...';
-          goLiveBtn.classList.remove('live');
-          break;
-        case 'connecting':
-          goLiveBtn.textContent = '🎤 Connecting...';
-          goLiveBtn.classList.remove('live');
-          break;
-        case 'live':
-          goLiveBtn.textContent = '🔴 LIVE — Tap to Stop';
-          goLiveBtn.classList.add('live');
-          break;
-      }
-    };
+    // Mic state change handler
+    if (typeof MicEngine !== 'undefined') {
+      MicEngine.onStateChange = (newState) => {
+        switch (newState) {
+          case 'off':
+            micGoLiveBtn.textContent = '🎤 Go Live';
+            micGoLiveBtn.classList.remove('live');
+            micFabBtn.classList.remove('live');
+            if (micStateBadge) micStateBadge.textContent = 'OFF';
+            if (micStateBadge) micStateBadge.classList.remove('live');
+            break;
+          case 'local':
+            micGoLiveBtn.textContent = '🎤 Connecting...';
+            micGoLiveBtn.classList.remove('live');
+            if (micStateBadge) micStateBadge.textContent = 'CONNECTING';
+            break;
+          case 'connecting':
+            micGoLiveBtn.textContent = '🎤 Connecting...';
+            micGoLiveBtn.classList.remove('live');
+            if (micStateBadge) micStateBadge.textContent = 'CONNECTING';
+            break;
+          case 'live':
+            micGoLiveBtn.textContent = '🔴 LIVE — Tap to Stop';
+            micGoLiveBtn.classList.add('live');
+            micFabBtn.classList.add('live');
+            if (micStateBadge) micStateBadge.textContent = 'LIVE';
+            if (micStateBadge) micStateBadge.classList.add('live');
+            break;
+        }
+      };
 
-    MicEngine.onLevelChange = (level) => {
-      if (micLevelFill) {
-        micLevelFill.style.width = (level * 100) + '%';
-      }
-    };
+      MicEngine.onLevelChange = (level) => {
+        if (micLevelFill) {
+          micLevelFill.style.width = (level * 100) + '%';
+        }
+      };
+    }
 
-    micMonitorSlider.addEventListener('input', () => {
-      MicEngine.setMonitorVolume(micMonitorSlider.value / 100);
-    });
+    if (micMonitorSlider) {
+      micMonitorSlider.addEventListener('input', () => {
+        if (typeof MicEngine !== 'undefined') {
+          MicEngine.setMonitorVolume(micMonitorSlider.value / 100);
+        }
+      });
+    }
 
-    micReverbSlider.addEventListener('input', () => {
-      MicEngine.setReverbMix(micReverbSlider.value / 100);
-    });
+    if (micReverbSlider) {
+      micReverbSlider.addEventListener('input', () => {
+        if (typeof MicEngine !== 'undefined') {
+          MicEngine.setReverbMix(micReverbSlider.value / 100);
+        }
+      });
+    }
 
-    micEnhanceToggle.addEventListener('change', () => {
-      MicEngine.setEnhancement(micEnhanceToggle.checked);
-    });
+    if (micEnhanceToggle) {
+      micEnhanceToggle.addEventListener('change', () => {
+        if (typeof MicEngine !== 'undefined') {
+          MicEngine.setEnhancement(micEnhanceToggle.checked);
+        }
+      });
+    }
 
     // ==================== INIT ====================
     initializeApp();

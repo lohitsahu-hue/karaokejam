@@ -178,3 +178,97 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .lo-time { font-size: 11px; color: #555; font-variant-numeric: tabular-nums; }
 .lo-sync { display: flex; align-items: center; gap: 8px; }
 .lo-sync-value { font-size: 11px; color: #666; min-width: 80px; text-align: center; font-variant-numeric: tabular-nums; }
+
+/* ─── Mobile: 768px and below ─── */
+@media (max-width: 768px) {
+  /* Mixer stem rows */
+  .mixer-stem-row { gap: 8px; }
+  .stem-label { min-width: 100px; font-size: 12px; }
+
+  /* Lyrics lines padding adjustment */
+  .lo-lines { padding: 0 24px; gap: 16px; }
+
+  /* Key section */
+  .mixer-key-section { padding: 12px; border-radius: 8px; }
+  .mixer-key-label { font-size: 13px; }
+  .mixer-key-value { font-size: 18px; }
+
+  /* Lyrics overlay title and text sizing */
+  .lo-song-title { font-size: 12px; }
+  .lo-song-artist { font-size: 10px; }
+
+  .lo-line.prev .lo-text { font-size: 24px; }
+  .lo-line.curr .lo-text { font-size: 36px; }
+  .lo-line.next .lo-text { font-size: 24px; }
+
+  /* Overlay footer controls */
+  .lo-controls { padding: 12px 16px; gap: 8px; }
+  .lo-transport { gap: 10px; }
+
+  /* Button sizing for touch targets */
+  .lo-close { width: 40px; height: 40px; font-size: 16px; }
+  .btn-lyrics { padding: 10px 16px; font-size: 13px; }
+
+  /* Transport buttons in mixer */
+  .mixer-transport { gap: 10px; margin: 20px 0 16px; }
+  .btn { padding: 10px 16px; font-size: 13px; }
+  .btn-primary, .btn-secondary { min-height: 44px; }
+
+  /* Panel padding */
+  .mixer-panel { padding: 50px 16px 16px; }
+  .mixer-title { font-size: 18px; margin-bottom: 12px; }
+}
+
+/* ─── Extra-Small Screens: 480px and below ─── */
+@media (max-width: 480px) {
+  /* Lyrics lines — minimal padding */
+  .lo-lines { padding: 0 12px; gap: 14px; }
+
+  /* Further font size reductions for readability */
+  .lo-line.prev .lo-text { font-size: 20px; }
+  .lo-line.curr .lo-text { font-size: 28px; font-weight: 700; }
+  .lo-line.next .lo-text { font-size: 20px; }
+
+  .lo-line.prev .lo-roman { font-size: 13px; }
+  .lo-line.curr .lo-roman { font-size: 16px; }
+  .lo-line.next .lo-roman { font-size: 13px; }
+
+  /* Stem row */
+  .stem-label { min-width: 80px; font-size: 11px; }
+  .stem-vol-label { font-size: 11px; }
+
+  /* Overlay header and controls */
+  .lo-header { padding: 12px 16px; }
+  .lo-controls { padding: 10px 12px; }
+  .lo-song-title { font-size: 11px; }
+  .lo-song-artist { font-size: 9px; }
+
+  /* Key section compact */
+  .mixer-key-section { padding: 10px; }
+  .mixer-key-label { font-size: 12px; }
+  .mixer-key-value { font-size: 16px; }
+  .key-bound { font-size: 10px; }
+
+  /* Buttons remain touch-target size (44px min) */
+  .lo-close { width: 44px; height: 44px; font-size: 14px; }
+  .btn { min-height: 44px; padding: 8px 14px; font-size: 12px; }
+
+  /* Panel and margins */
+  .mixer-panel { padding: 48px 12px 12px; }
+  .mixer-title { font-size: 16px; margin-bottom: 10px; }
+  .mixer-lyrics-row { margin-top: 12px; gap: 8px; }
+  .btn-lyrics { padding: 8px 12px; font-size: 12px; }
+
+  /* Search and queue sections */
+  .search-section { padding: 12px 16px; }
+  .queue-section { padding: 0 16px 100px; }
+
+  /* Room header adjustments */
+  .room-header { padding: 12px 16px; }
+  .room-code-display { font-size: 18px; }
+
+  /* Landing view */
+  .landing { padding: 16px; gap: 16px; }
+  .logo { font-size: 36px; }
+  .landing-actions { gap: 12px; }
+}
