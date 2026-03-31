@@ -8,9 +8,12 @@ function searchYouTube(query, maxResults = 8) {
       return reject(new Error('YOUTUBE_API_KEY not configured'));
     }
 
+    // Prioritize original audio versions — exclude karaoke/instrumental/covers
+    // since the app does its own stem separation via Demucs
+    const searchQuery = query + ' -karaoke -instrumental -cover -lyrics';
     const params = new URLSearchParams({
       part: 'snippet',
-      q: query,
+      q: searchQuery,
       type: 'video',
       videoCategoryId: '10', // Music
       maxResults: String(maxResults),
