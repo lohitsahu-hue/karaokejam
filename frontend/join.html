@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KaraokeJam — Join Party</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #0f0f17;
+    color: #fff;
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 16px 20px;
+    background: rgba(15,15,23,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(12px);
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 18px; font-weight: 700; }
+  .logo span { color: #8b5cf6; }
+  .room-info { font-size: 12px; color: rgba(255,255,255,0.4); }
+  .user-badge {
+    font-size: 12px; color: #8b5cf6; background: rgba(139,92,246,0.12);
+    padding: 4px 10px; border-radius: 12px; font-weight: 600;
+  }
+</style>
+<style>
+  /* ── Name Entry ── */
+  .name-gate {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh; padding: 40px 24px; gap: 20px;
+  }
+  .name-gate h1 { font-size: 28px; font-weight: 700; }
+  .name-gate h1 span { color: #8b5cf6; }
+  .name-gate p { color: rgba(255,255,255,0.4); font-size: 14px; }
+  .name-input {
+    width: 100%; max-width: 300px; padding: 14px 18px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; color: #fff; font-size: 16px; text-align: center;
+    outline: none; transition: border-color 0.2s;
+  }
+  .name-input:focus { border-color: #8b5cf6; }
+  .btn-join {
+    padding: 14px 40px; background: #8b5cf6; color: #fff;
+    border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .btn-join:active { opacity: 0.8; }
+
+  /* ── Search ── */
+  .search-bar {
+    display: flex; gap: 8px; padding: 12px 20px;
+    background: rgba(15,15,23,0.95);
+    position: sticky; top: 60px; z-index: 9;
+  }
+  .search-input {
+    flex: 1; padding: 12px 16px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; color: #fff; font-size: 15px; outline: none;
+  }
+  .search-input:focus { border-color: #8b5cf6; }
+  .btn-search {
+    padding: 12px 20px; background: #8b5cf6; color: #fff;
+    border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+</style>
+<style>
+  /* ── Search Results ── */
+  .results { padding: 8px 20px; }
+  .result-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px; border-radius: 12px; margin-bottom: 6px;
+    background: rgba(255,255,255,0.03);
+    transition: background 0.2s; cursor: pointer;
+  }
+  .result-item:active { background: rgba(139,92,246,0.12); }
+  .ri-thumb { width: 56px; height: 42px; border-radius: 6px; object-fit: cover; }
+  .ri-info { flex: 1; min-width: 0; }
+  .ri-title { font-size: 14px; font-weight: 600; color: #f1f1f1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ri-artist { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .ri-add {
+    padding: 8px 14px; background: rgba(139,92,246,0.15); color: #8b5cf6;
+    border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+    white-space: nowrap;
+  }
+  .ri-add:active { background: rgba(139,92,246,0.3); }
+  .ri-add.added { background: rgba(52,211,153,0.12); color: #34d399; pointer-events: none; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex; border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 0 20px; position: sticky; top: 60px; z-index: 8;
+    background: #0f0f17;
+  }
+  .tab {
+    flex: 1; padding: 12px 0; text-align: center;
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.35);
+    border-bottom: 2px solid transparent; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab.active { color: #8b5cf6; border-bottom-color: #8b5cf6; }
+</style>
+<style>
+  /* ── Queue list ── */
+  .queue-section { padding: 12px 20px; }
+  .queue-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px; border-radius: 12px; margin-bottom: 6px;
+    background: rgba(255,255,255,0.03);
+  }
+  .queue-item.mine { border-left: 3px solid #8b5cf6; }
+  .queue-item.playing { background: rgba(236,72,153,0.08); border-left: 3px solid #ec4899; }
+  .qi-pos { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.2); width: 28px; text-align: center; }
+  .qi-thumb { width: 44px; height: 33px; border-radius: 6px; object-fit: cover; }
+  .qi-info { flex: 1; min-width: 0; }
+  .qi-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .qi-meta { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+  .qi-you { font-size: 10px; color: #8b5cf6; font-weight: 700; }
+  .qi-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+  .qi-status.playing { color: #ec4899; }
+  .qi-status.downloading { color: #fbbf24; }
+  .qi-status.ready { color: #34d399; }
+
+  /* ── Now playing mini bar ── */
+  .mini-player {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 12px 20px; background: rgba(15,15,23,0.95);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px); z-index: 20;
+  }
+  .mini-player.visible { display: flex; align-items: center; gap: 12px; }
+  .mp-info { flex: 1; }
+  .mp-title { font-size: 13px; font-weight: 600; }
+  .mp-singer { font-size: 11px; color: rgba(255,255,255,0.4); }
+  .mp-badge { font-size: 10px; color: #ec4899; text-transform: uppercase; letter-spacing: 1px; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+  .empty-msg { text-align: center; color: rgba(255,255,255,0.2); padding: 40px 20px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- Name gate -->
+<div id="view-name" class="view active">
+  <div class="name-gate">
+    <h1>Karaoke<span>Jam</span></h1>
+    <p>Enter your name to join the party</p>
+    <input type="text" class="name-input" id="name-input" placeholder="Your name" maxlength="20" autofocus>
+    <button class="btn-join" id="btn-join">Join Party</button>
+  </div>
+</div>
+
+<!-- Main party view -->
+<div id="view-party" class="view">
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">Karaoke<span>Jam</span></div>
+      <div class="user-badge" id="user-badge"></div>
+    </div>
+    <div class="room-info" id="room-info"></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="search">Search</div>
+    <div class="tab" data-tab="queue">Queue <span id="queue-count"></span></div>
+  </div>
+
+  <!-- Search tab -->
+  <div id="tab-search" class="view active">
+    <div class="search-bar">
+      <input type="text" class="search-input" id="search-input" placeholder="Search for a song...">
+      <button class="btn-search" id="btn-search">Search</button>
+    </div>
+    <div class="results" id="results"></div>
+  </div>
+
+  <!-- Queue tab -->
+  <div id="tab-queue" class="view">
+    <div class="queue-section" id="queue-list"></div>
+  </div>
+
+  <!-- Mini player -->
+  <div class="mini-player" id="mini-player">
+    <div class="mp-info">
+      <div class="mp-badge">Now Playing</div>
+      <div class="mp-title" id="mp-title"></div>
+      <div class="mp-singer" id="mp-singer"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  const pathParts = window.location.pathname.split('/');
+  const roomCode = pathParts[2] || '';
+
+  let socket = null;
+  let roomId = null;
+  let guestId = null;
+  let userName = '';
+  let queue = [];
+  let currentSong = null;
+
+  // ── Tab switching ──
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const name = tab.dataset.tab;
+      document.getElementById('tab-search').classList.toggle('active', name === 'search');
+      document.getElementById('tab-queue').classList.toggle('active', name === 'queue');
+    });
+  });
+
+  // ── Name gate ──
+  const savedName = localStorage.getItem('karaoke-name') || '';
+  document.getElementById('name-input').value = savedName;
+
+  document.getElementById('btn-join').addEventListener('click', joinParty);
+  document.getElementById('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') joinParty(); });
+
+  async function joinParty() {
+    userName = document.getElementById('name-input').value.trim();
+    if (!userName) { document.getElementById('name-input').focus(); return; }
+    localStorage.setItem('karaoke-name', userName);
+
+    if (!roomCode) { alert('No room code in URL'); return; }
+
+    const res = await fetch('/api/rooms/join', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: roomCode, guestName: userName }),
+    });
+    const data = await res.json();
+    if (data.error) { alert('Room not found'); return; }
+
+    roomId = data.roomId;
+    guestId = data.guestId;
+    queue = data.queue || [];
+
+    // Show party view
+    document.getElementById('view-name').classList.remove('active');
+    document.getElementById('view-party').classList.add('active');
+    document.getElementById('user-badge').textContent = userName;
+    document.getElementById('room-info').textContent = `Room: ${roomCode} · Host: ${data.hostName}`;
+
+    renderQueue();
+    connectSocket();
+  }
+
+  // ── WebSocket ──
+  function connectSocket() {
+    socket = io();
+    socket.emit('room:join', { roomId, guestId, guestName: userName, asHost: false });
+
+    socket.on('queue:updated', data => {
+      queue = data.queue || [];
+      renderQueue();
+      document.getElementById('queue-count').textContent = queue.filter(q => q.status !== 'played').length || '';
+    });
+
+    socket.on('playback:started', data => {
+      currentSong = data.currentSong;
+      showMiniPlayer(currentSong);
+      renderQueue();
+    });
+
+    socket.on('playback:nextSong', data => {
+      currentSong = data.currentSong;
+      queue = data.queue || [];
+      showMiniPlayer(currentSong);
+      renderQueue();
+    });
+
+    socket.on('playback:queueEmpty', () => {
+      currentSong = null;
+      document.getElementById('mini-player').classList.remove('visible');
+    });
+  }
+
+  // ── Search ──
+  document.getElementById('btn-search').addEventListener('click', doSearch);
+  document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+  async function doSearch() {
+    const query = document.getElementById('search-input').value.trim();
+    if (!query) return;
+    document.getElementById('results').innerHTML = '<div class="empty-msg">Searching...</div>';
+
+    const res = await fetch('/api/search/youtube', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
+    const data = await res.json();
+    const results = data.results || [];
+
+    if (results.length === 0) {
+      document.getElementById('results').innerHTML = '<div class="empty-msg">No results found</div>';
+      return;
+    }
+
+    document.getElementById('results').innerHTML = results.map((r, i) => `
+      <div class="result-item" data-idx="${i}">
+        ${r.thumbnail ? `<img class="ri-thumb" src="${r.thumbnail}" alt="">` : ''}
+        <div class="ri-info">
+          <div class="ri-title">${r.title || ''}</div>
+          <div class="ri-artist">${r.artist || r.channelTitle || ''}</div>
+        </div>
+        <button class="ri-add" data-idx="${i}">+ Add</button>
+      </div>
+    `).join('');
+
+    // Store results for add handler
+    window._searchResults = results;
+
+    // Add click handlers
+    document.querySelectorAll('.ri-add').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.idx);
+        addToQueue(window._searchResults[idx], btn);
+      });
+    });
+  }
+
+  async function addToQueue(song, btn) {
+    if (!song || !roomId) return;
+    btn.textContent = 'Added';
+    btn.classList.add('added');
+
+    await fetch(`/api/rooms/${roomId}/queue`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        youtubeId: song.videoId || song.id,
+        title: song.title,
+        artist: song.artist || song.channelTitle || '',
+        thumbnail: song.thumbnail,
+        duration: song.duration || 0,
+        requestedBy: guestId,
+        requestedByName: userName,
+      }),
+    });
+
+    // Switch to queue tab
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('[data-tab="queue"]').classList.add('active');
+    document.getElementById('tab-search').classList.remove('active');
+    document.getElementById('tab-queue').classList.add('active');
+  }
+
+  // ── Queue Renderer ──
+  function renderQueue() {
+    const list = document.getElementById('queue-list');
+    const active = queue.filter(q => q.status !== 'played');
+
+    if (active.length === 0) {
+      list.innerHTML = '<div class="empty-msg">No songs yet — search and add one!</div>';
+      return;
+    }
+
+    list.innerHTML = active.map((item, i) => {
+      let cls = 'queue-item';
+      if (item.requestedBy === guestId) cls += ' mine';
+      if (item.status === 'playing') cls += ' playing';
+
+      const statusMap = { playing: '♪ Playing', downloading: 'Loading...', ready: 'Ready', error: 'Error' };
+      const statusText = statusMap[item.status] || '';
+      const statusCls = item.status || '';
+
+      return `
+        <div class="${cls}">
+          <div class="qi-pos">${i + 1}</div>
+          ${item.thumbnail ? `<img class="qi-thumb" src="${item.thumbnail}" alt="">` : ''}
+          <div class="qi-info">
+            <div class="qi-title">${item.title || 'Unknown'}</div>
+            <div class="qi-meta">
+              ${item.requestedByName || 'Guest'}
+              ${item.requestedBy === guestId ? '<span class="qi-you"> · You</span>' : ''}
+            </div>
+          </div>
+          ${statusText ? `<div class="qi-status ${statusCls}">${statusText}</div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  function showMiniPlayer(song) {
+    if (!song) return;
+    document.getElementById('mini-player').classList.add('visible');
+    document.getElementById('mp-title').textContent = song.title || '';
+    document.getElementById('mp-singer').textContent = song.requestedByName || '';
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KaraokeJam — Party Screen</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #0a0a0f;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Animated gradient background */
+  .bg-pulse {
+    position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(139, 92, 246, 0.15), transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(236, 72, 153, 0.12), transparent 60%);
+    animation: bgShift 8s ease-in-out infinite alternate;
+  }
+  @keyframes bgShift {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+
+  .container { position: relative; z-index: 1; height: 100vh; display: flex; }
+
+  /* ── Left: Main content (lyrics + now playing) ── */
+  .main-area {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 40px 48px;
+  }
+</style>
+<style>
+  /* ── Now Playing header ── */
+  .now-playing-bar {
+    display: flex; align-items: center; gap: 16px;
+    padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 24px; min-height: 60px;
+  }
+  .np-thumb { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; }
+  .np-info { flex: 1; }
+  .np-title { font-size: 18px; font-weight: 600; color: #f1f1f1; }
+  .np-artist { font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .np-badge {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: rgba(139, 92, 246, 0.9); font-weight: 600;
+  }
+
+  /* ── Lyrics area ── */
+  .lyrics-area {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center; gap: 12px;
+    padding: 20px 40px;
+  }
+  .lyric-line {
+    font-size: 42px; font-weight: 800; line-height: 1.3;
+    color: rgba(255,255,255,0.2);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 900px;
+  }
+  .lyric-line.active {
+    color: #fff;
+    text-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+    transform: scale(1.05);
+  }
+  .lyric-line.past { color: rgba(255,255,255,0.15); }
+  .lyric-roman {
+    font-size: 22px; font-weight: 400;
+    color: rgba(255,255,255,0.35);
+    margin-top: -4px;
+    transition: all 0.4s ease;
+  }
+  .lyric-line.active + .lyric-roman { color: rgba(255,255,255,0.6); }
+
+  .lyrics-idle {
+    font-size: 64px; font-weight: 800; color: rgba(255,255,255,0.08);
+    text-align: center;
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap {
+    width: 100%; height: 3px; background: rgba(255,255,255,0.08);
+    border-radius: 2px; overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; width: 0%; border-radius: 2px;
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    transition: width 0.5s linear;
+  }
+</style>
+<style>
+  /* ── Right sidebar: Queue ── */
+  .queue-sidebar {
+    width: 320px; background: rgba(255,255,255,0.03);
+    border-left: 1px solid rgba(255,255,255,0.06);
+    display: flex; flex-direction: column;
+    padding: 32px 20px;
+  }
+  .queue-header {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 2px;
+    color: rgba(255,255,255,0.4); font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .queue-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .queue-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    transition: background 0.3s;
+  }
+  .queue-item.up-next {
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+  }
+  .queue-item.now-playing-q {
+    background: rgba(236, 72, 153, 0.12);
+    border: 1px solid rgba(236, 72, 153, 0.2);
+  }
+  .qi-pos {
+    font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.25);
+    width: 24px; text-align: center;
+  }
+  .qi-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+  .qi-info { flex: 1; min-width: 0; }
+  .qi-title {
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .qi-singer {
+    font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px;
+  }
+  .qi-status {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 2px 6px; border-radius: 4px;
+  }
+  .qi-status.ready { color: #34d399; }
+  .qi-status.downloading { color: #fbbf24; }
+  .qi-status.playing { color: #ec4899; }
+
+  /* ── Up Next callout ── */
+  .up-next-banner {
+    display: none; text-align: center; padding: 40px;
+    animation: fadeIn 0.8s ease;
+  }
+  .up-next-banner.visible { display: block; }
+  .up-next-label { font-size: 18px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 3px; }
+  .up-next-name { font-size: 52px; font-weight: 800; color: #8b5cf6; margin: 12px 0; }
+  .up-next-song { font-size: 24px; color: rgba(255,255,255,0.6); }
+
+  /* ── Room code badge ── */
+  .room-badge {
+    position: fixed; bottom: 20px; left: 20px; z-index: 10;
+    font-size: 13px; color: rgba(255,255,255,0.3);
+    background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 8px;
+  }
+  .room-badge span { font-weight: 700; color: rgba(139,92,246,0.7); }
+
+  .queue-list::-webkit-scrollbar { width: 4px; }
+  .queue-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div class="bg-pulse"></div>
+<div class="container">
+
+  <!-- Main content area -->
+  <div class="main-area">
+    <!-- Now Playing bar -->
+    <div class="now-playing-bar" id="now-playing-bar" style="display:none">
+      <img class="np-thumb" id="np-thumb" src="" alt="">
+      <div class="np-info">
+        <div class="np-badge">Now Playing</div>
+        <div class="np-title" id="np-title"></div>
+        <div class="np-artist" id="np-artist"></div>
+      </div>
+    </div>
+
+    <!-- Lyrics display -->
+    <div class="lyrics-area" id="lyrics-area">
+      <div class="lyrics-idle" id="lyrics-idle">KaraokeJam</div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-wrap" id="progress-wrap" style="display:none">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <!-- Up Next transition -->
+    <div class="up-next-banner" id="up-next-banner">
+      <div class="up-next-label">Up Next</div>
+      <div class="up-next-name" id="up-next-name"></div>
+      <div class="up-next-song" id="up-next-song"></div>
+    </div>
+  </div>
+
+  <!-- Queue sidebar -->
+  <div class="queue-sidebar">
+    <div class="queue-header">Queue</div>
+    <div class="queue-list" id="queue-list"></div>
+  </div>
+
+</div>
+
+<div class="room-badge">Join at <span id="room-url"></span></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/scripts/engine/lyricsEngine.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // Extract room code from URL: /tv/KRK-XXXX
+  const pathParts = window.location.pathname.split('/');
+  const roomCode = pathParts[2] || '';
+  if (!roomCode) {
+    document.getElementById('lyrics-idle').textContent = 'No room code in URL';
+    return;
+  }
+
+  // Show join URL
+  const host = window.location.host;
+  document.getElementById('room-url').textContent = `${host}/join/${roomCode}`;
+
+  let socket = null;
+  let roomId = null;
+  let queue = [];
+  let currentSong = null;
+  let lyricsLines = [];
+  let lyricsOffset = 0;
+  let playbackState = 'stopped';
+  let playbackStartedAt = null;
+  let playbackOffsetSec = 0;
+
+  // ── Connect ──
+  async function init() {
+    // Resolve room code to roomId
+    const res = await fetch(`/api/rooms/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: roomCode, guestName: '📺 TV Display' }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      document.getElementById('lyrics-idle').textContent = 'Room not found';
+      return;
+    }
+    roomId = data.roomId;
+    queue = data.queue || [];
+    renderQueue();
+
+    // Connect WebSocket
+    socket = io();
+    socket.emit('room:join', {
+      roomId, guestId: data.guestId, guestName: '📺 TV Display', asHost: false
+    });
+
+    // Listen for state
+    socket.on('room:state', (data) => {
+      queue = data.room.queue || [];
+      renderQueue();
+    });
+
+    socket.on('queue:updated', (data) => {
+      queue = data.queue || [];
+      renderQueue();
+    });
+
+    socket.on('playback:started', (data) => {
+      playbackState = 'playing';
+      playbackStartedAt = Date.now();
+      playbackOffsetSec = data.playback?.offsetSec || 0;
+      currentSong = data.currentSong;
+      showNowPlaying(currentSong);
+      loadLyrics(currentSong);
+      renderQueue();
+      startLyricsTimer();
+    });
+
+    socket.on('playback:paused', (data) => {
+      playbackState = 'paused';
+      playbackOffsetSec = data.currentTime || 0;
+      playbackStartedAt = null;
+    });
+
+    socket.on('playback:seeked', (data) => {
+      playbackOffsetSec = data.time || 0;
+      if (playbackState === 'playing') playbackStartedAt = Date.now();
+    });
+
+    socket.on('playback:controlUpdate', (data) => {
+      if (data.lyricsOffset !== undefined) lyricsOffset = data.lyricsOffset;
+    });
+
+    socket.on('playback:nextSong', (data) => {
+      currentSong = data.currentSong;
+      playbackState = 'stopped';
+      queue = data.queue || [];
+      renderQueue();
+      showUpNext(currentSong);
+    });
+
+    socket.on('playback:queueEmpty', () => {
+      playbackState = 'stopped';
+      currentSong = null;
+      hideNowPlaying();
+      showIdle();
+    });
+  }
+
+  // ── Now Playing ──
+  function showNowPlaying(song) {
+    if (!song) return;
+    const bar = document.getElementById('now-playing-bar');
+    bar.style.display = 'flex';
+    document.getElementById('np-title').textContent = song.title || '';
+    document.getElementById('np-artist').textContent = song.artist || '';
+    document.getElementById('np-thumb').src = song.thumbnail || '';
+    document.getElementById('progress-wrap').style.display = 'block';
+    document.getElementById('lyrics-idle').style.display = 'none';
+    document.getElementById('up-next-banner').classList.remove('visible');
+  }
+
+  function hideNowPlaying() {
+    document.getElementById('now-playing-bar').style.display = 'none';
+    document.getElementById('progress-wrap').style.display = 'none';
+  }
+
+  function showIdle() {
+    document.getElementById('lyrics-idle').style.display = 'block';
+    document.getElementById('lyrics-idle').textContent = 'KaraokeJam';
+    clearLyrics();
+  }
+
+  function showUpNext(song) {
+    if (!song) return;
+    const banner = document.getElementById('up-next-banner');
+    document.getElementById('up-next-name').textContent = song.requestedByName || 'Next Singer';
+    document.getElementById('up-next-song').textContent = song.title || '';
+    banner.classList.add('visible');
+    hideNowPlaying();
+    clearLyrics();
+    // Auto-hide after 5 seconds
+    setTimeout(() => banner.classList.remove('visible'), 5000);
+  }
+
+  // ── Lyrics ──
+  function loadLyrics(song) {
+    lyricsLines = [];
+    if (song && song.lrcData && song.lrcData.rawLRC) {
+      lyricsLines = LyricsEngine.processLRC(song.lrcData.rawLRC);
+    } else if (song && song.lrcData && song.lrcData.lines) {
+      lyricsLines = song.lrcData.lines;
+    }
+  }
+
+  function clearLyrics() {
+    document.getElementById('lyrics-area').innerHTML =
+      '<div class="lyrics-idle" id="lyrics-idle">KaraokeJam</div>';
+    lyricsLines = [];
+  }
+
+  let lyricsTimer = null;
+  function startLyricsTimer() {
+    if (lyricsTimer) cancelAnimationFrame(lyricsTimer);
+    function tick() {
+      if (playbackState !== 'playing') return;
+      const now = getCurrentTime();
+      updateLyricsDisplay(now);
+      updateProgress(now);
+      lyricsTimer = requestAnimationFrame(tick);
+    }
+    lyricsTimer = requestAnimationFrame(tick);
+  }
+
+  function getCurrentTime() {
+    if (playbackState !== 'playing' || !playbackStartedAt) return playbackOffsetSec;
+    return playbackOffsetSec + (Date.now() - playbackStartedAt) / 1000;
+  }
+
+  let lastLineIdx = -2;
+  function updateLyricsDisplay(timeSec) {
+    if (!lyricsLines || lyricsLines.length === 0) return;
+
+    const idx = LyricsEngine.findLineIndex(lyricsLines, timeSec, lyricsOffset);
+    if (idx === lastLineIdx) return;
+    lastLineIdx = idx;
+
+    const area = document.getElementById('lyrics-area');
+    const prev = idx > 0 ? lyricsLines[idx - 1] : null;
+    const curr = idx >= 0 ? lyricsLines[idx] : null;
+    const next = idx + 1 < lyricsLines.length ? lyricsLines[idx + 1] : null;
+
+    let html = '';
+    if (prev) {
+      html += `<div class="lyric-line past">${prev.text}</div>`;
+      if (prev.roman) html += `<div class="lyric-roman">${prev.roman}</div>`;
+    }
+    if (curr) {
+      html += `<div class="lyric-line active">${curr.text}</div>`;
+      if (curr.roman) html += `<div class="lyric-roman">${curr.roman}</div>`;
+    }
+    if (next) {
+      html += `<div class="lyric-line">${next.text}</div>`;
+      if (next.roman) html += `<div class="lyric-roman">${next.roman}</div>`;
+    }
+    area.innerHTML = html;
+  }
+
+  function updateProgress(timeSec) {
+    if (!currentSong || !currentSong.duration) return;
+    const pct = Math.min(100, (timeSec / currentSong.duration) * 100);
+    document.getElementById('progress-bar').style.width = pct + '%';
+  }
+
+  // ── Queue Renderer ──
+  function renderQueue() {
+    const list = document.getElementById('queue-list');
+    if (!queue || queue.length === 0) {
+      list.innerHTML = '<div style="color:rgba(255,255,255,0.2);text-align:center;padding:40px 0;font-size:14px">No songs in queue</div>';
+      return;
+    }
+
+    list.innerHTML = queue.map((item, i) => {
+      let cls = 'queue-item';
+      let statusText = '';
+      if (item.status === 'playing') { cls += ' now-playing-q'; statusText = '♪ Playing'; }
+      else if (item.status === 'ready' && i === queue.findIndex(q => q.status === 'ready')) { cls += ' up-next'; statusText = 'Up next'; }
+      else if (item.status === 'downloading') { statusText = 'Loading...'; }
+      else if (item.status === 'ready') { statusText = 'Ready'; }
+      else if (item.status === 'played') { return ''; }
+
+      const statusCls = item.status === 'playing' ? 'playing' : item.status === 'downloading' ? 'downloading' : 'ready';
+      return `
+        <div class="${cls}">
+          <div class="qi-pos">${i + 1}</div>
+          ${item.thumbnail ? `<img class="qi-thumb" src="${item.thumbnail}" alt="">` : ''}
+          <div class="qi-info">
+            <div class="qi-title">${item.title || 'Unknown'}</div>
+            <div class="qi-singer">${item.requestedByName || 'Guest'}</div>
+          </div>
+          ${statusText ? `<div class="qi-status ${statusCls}">${statusText}</div>` : ''}
+        </div>`;
+    }).filter(Boolean).join('');
+  }
+
+  // Boot
+  init();
+})();
+</script>
+</body>
+</html>

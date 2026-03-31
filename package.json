@@ -1,0 +1,21 @@
+{
+  "name": "karaoke-party-app",
+  "version": "0.1.0",
+  "description": "Cross-platform karaoke party hosting app with stem separation, lyrics sync, and real-time rooms",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "uuid": "^9.0.0",
+    "bull": "^4.12.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
