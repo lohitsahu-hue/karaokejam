@@ -234,9 +234,16 @@ async function runpodPipeline(youtubeId, jobId) {
   while (Date.now() - startTime < MAX_WAIT) {
     await sleep(POLL_INTERVAL);
 
-    const statusRes = await fetch(`${baseUrl}/status/${runpodJobId}`, { headers });
+    let statusRes;
+    try {
+      statusRes = await fetch(`${baseUrl}/status/${runpodJobId}`, { headers });
+    } catch (fetchErr) {
+      log.warn(`RunPod: status fetch error: ${fetchErr.message}`);
+      continue;
+    }
     if (!statusRes.ok) {
-      log.warn(`RunPod: status check failed (${statusRes.status})`);
+      const errBody = await statusRes.text().catch(() => '');
+      log.warn(`RunPod: status check failed (${statusRes.status}): ${errBody}`);
       continue;
     }
 
@@ -245,7 +252,7 @@ async function runpodPipeline(youtubeId, jobId) {
 
     if (status === 'IN_QUEUE' || status === 'IN_PROGRESS') {
       const elapsed = Math.round((Date.now() - startTime) / 1000);
-      log.debug(`RunPod: ${status} (${elapsed}s elapsed)...`);
+      log.info(`RunPod: ${status} (${elapsed}s elapsed)...`);
       continue;
     }
 
