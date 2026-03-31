@@ -86,6 +86,10 @@ router.post('/rooms/:roomId/queue', async (req, res) => {
   const job = db.createJob(room.id, queueItem.id, 'full_pipeline');
   queueItem.status = 'downloading';
 
+  // Broadcast queue update immediately so all clients see the new song
+  const io = require('../server').io;
+  if (io) io.to(room.id).emit('queue:updated', { queue: room.queue });
+
   res.json({ queueItem, jobId: job.id });
 
   // Run pipeline in background (don't await in request handler)
@@ -102,6 +106,16 @@ async function runPipeline(roomId, queueItemId, jobId, youtubeId, title, artist)
     db.updateJob(jobId, { status: 'running', startedAt: Date.now() });
     db.updateQueueItemStatus(roomId, queueItemId, 'downloading');
     if (io && room) io.to(roomId).emit('queue:updated', { queue: room.queue });
+
+    // Set up progress callback to broadcast status to room
+    const { runpodPipeline } = require('../services/stemExtractor');
+    if (typeof runpodPipeline === 'function') {
+      runpodPipeline._onProgress = ({ phase, elapsed }) => {
+        if (io) {
+          io.to(roomId).emit('job:progress', { queueItemId, jobId, phase, elapsed });
+        }
+      };
+    }
 
     const stems = await fullPipeline(youtubeId, jobId);
 

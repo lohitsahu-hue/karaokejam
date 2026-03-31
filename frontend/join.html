@@ -473,6 +473,10 @@
       background-color: var(--status-green);
     }
 
+    .status-error {
+      background-color: var(--status-red);
+    }
+
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
@@ -1894,6 +1898,25 @@
         updateQueueView();
         updateMiniPlayer();
       });
+
+      // Progress updates for downloading songs
+      app.socket.on('job:progress', (data) => {
+        const statusEls = document.querySelectorAll('.status-indicator.status-loading');
+        statusEls.forEach(el => {
+          const parent = el.closest('.queue-item');
+          if (parent) {
+            let badge = parent.querySelector('.progress-badge');
+            if (!badge) {
+              badge = document.createElement('div');
+              badge.className = 'progress-badge';
+              badge.style.cssText = 'font-size:0.65rem;color:var(--status-amber);margin-top:2px;';
+              const info = parent.querySelector('.queue-item-info');
+              if (info) info.appendChild(badge);
+            }
+            badge.textContent = `${data.phase} (${data.elapsed}s)`;
+          }
+        });
+      });
     }
 
     // ==================== TAB SWITCHING ====================
@@ -1942,24 +1965,27 @@
         return;
       }
 
-      container.innerHTML = app.searchResults.map((song, idx) => `
+      container.innerHTML = app.searchResults.map((song, idx) => {
+        const id = song.youtubeId || song.id;
+        const artist = song.channel || song.artist || 'Unknown';
+        return `
         <div class="song-card">
           <img src="${song.thumbnail || '/images/placeholder.png'}" alt="" class="song-thumbnail">
           <div class="song-info">
             <div class="song-title">${song.title}</div>
-            <div class="song-artist">${song.artist || 'Unknown'}</div>
+            <div class="song-artist">${artist}</div>
           </div>
           <button
-            class="add-btn ${app.addedSongs.has(song.id) ? 'added' : ''}"
-            data-song-id="${song.id}"
+            class="add-btn ${app.addedSongs.has(id) ? 'added' : ''}"
+            data-song-id="${id}"
             data-song-title="${song.title}"
-            data-song-artist="${song.artist || 'Unknown'}"
+            data-song-artist="${artist}"
             data-song-thumbnail="${song.thumbnail || ''}"
           >
-            ${app.addedSongs.has(song.id) ? 'Added ✓' : '+ Add'}
+            ${app.addedSongs.has(id) ? 'Added ✓' : '+ Add'}
           </button>
         </div>
-      `).join('');
+      `}).join('');
 
       container.querySelectorAll('.add-btn').forEach(btn => {
         btn.addEventListener('click', (e) => addSongToQueue(e, btn));
@@ -2020,7 +2046,8 @@
         const songId = song.id || song.songId;
         const isPlaying = songId === app.currentPlayingSongId || song.status === 'playing';
         const isUserSong = song.requestedBy === app.guestId || song.requestedByName === app.guestName;
-        const status = isPlaying ? 'playing' : (song.status === 'downloading' ? 'loading' : 'ready');
+        const status = isPlaying ? 'playing' : (song.status === 'downloading' ? 'loading' : (song.status === 'error' ? 'error' : 'ready'));
+        const statusText = isPlaying ? 'Playing' : (song.status === 'downloading' ? 'Preparing...' : (song.status === 'error' ? 'Error' : ''));
 
         return `
           <div class="queue-item ${isUserSong ? 'highlighted' : ''}">
@@ -2032,6 +2059,7 @@
                 ${isUserSong ? '<span class="you-badge">You</span>' : ''}
               </div>
               <div class="queue-item-requester">by ${song.requestedByName || song.requestedBy}</div>
+              ${statusText ? `<div style="font-size:0.65rem;color:${song.status === 'error' ? 'var(--status-red)' : 'var(--status-amber)'};margin-top:2px;">${statusText}</div>` : ''}
             </div>
             <div class="status-indicator status-${status}"></div>
           </div>

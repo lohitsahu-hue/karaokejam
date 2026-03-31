@@ -252,7 +252,12 @@ async function runpodPipeline(youtubeId, jobId) {
 
     if (status === 'IN_QUEUE' || status === 'IN_PROGRESS') {
       const elapsed = Math.round((Date.now() - startTime) / 1000);
+      const phase = status === 'IN_QUEUE' ? 'Waiting for GPU...' : 'Separating stems...';
       log.info(`RunPod: ${status} (${elapsed}s elapsed)...`);
+      // Emit progress event if callback provided
+      if (runpodPipeline._onProgress) {
+        runpodPipeline._onProgress({ phase, elapsed, status });
+      }
       continue;
     }
 
@@ -337,4 +342,4 @@ function getStemPath(jobId, stemName) {
   return findFile(stemDir, stemName);
 }
 
-module.exports = { downloadYouTube, separateStems, fullPipeline, getStemPath };
+module.exports = { downloadYouTube, separateStems, fullPipeline, getStemPath, runpodPipeline };

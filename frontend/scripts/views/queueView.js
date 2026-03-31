@@ -9,6 +9,12 @@ const QueueView = {
     WS.on('job:error', (data) => {
       console.error('[Queue] Job failed:', data.error);
     });
+    WS.on('job:progress', (data) => {
+      const statusEl = document.querySelector(`.queue-item-status.downloading`);
+      if (statusEl) {
+        statusEl.textContent = `${data.phase} (${data.elapsed}s)`;
+      }
+    });
   },
 
   render(queue) {

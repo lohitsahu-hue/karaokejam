@@ -744,6 +744,15 @@
             socket.on('playback:controlUpdate', handleControlUpdate);
             socket.on('playback:nextSong', handleNextSong);
             socket.on('playback:queueEmpty', handleQueueEmpty);
+            socket.on('job:progress', (data) => {
+                const statusEls = document.querySelectorAll('.queue-status:not(.playing)');
+                statusEls.forEach(el => {
+                    if (el.textContent.includes('Ready') === false) {
+                        el.textContent = `${data.phase} (${data.elapsed}s)`;
+                        el.style.fontSize = '0.65rem';
+                    }
+                });
+            });
         }
 
         function joinRoom() {
