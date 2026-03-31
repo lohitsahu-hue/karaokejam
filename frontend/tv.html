@@ -523,7 +523,8 @@
         // Initialize
         function init() {
             // Set up host URL
-            const hostUrl = `${window.location.hostname}:${window.location.port || (window.location.protocol === 'https:' ? 443 : 80)}/join/${roomCode}`;
+            const port = window.location.port;
+            const hostUrl = window.location.hostname + (port && port !== '443' && port !== '80' ? ':' + port : '') + '/join/' + roomCode;
             joinUrl.textContent = hostUrl;
             document.getElementById('room-code').textContent = hostUrl;
 
@@ -657,17 +658,36 @@
         function showIdleState() {
             nowPlayingBar.classList.add('idle');
             lyricsSection.classList.add('idle');
+            lyricsSection.innerHTML = `
+                <div class="logo">KaraokeJam</div>
+                <div class="join-message">Join at <span id="join-url">${joinUrl?.textContent || ''}</span></div>
+            `;
             queueList.innerHTML = '';
+            lyricsEngine = null;
         }
 
         function showPlayingState() {
             nowPlayingBar.classList.remove('idle');
             lyricsSection.classList.remove('idle');
 
+            // Replace idle content (logo/join msg) with lyric line placeholders
+            if (!lyricsSection.querySelector('.lyric-current')) {
+                lyricsSection.innerHTML = `
+                    <div class="lyric-line lyric-previous"></div>
+                    <div class="lyric-line lyric-current"></div>
+                    <div class="lyric-line lyric-next"></div>
+                `;
+            }
+
             // Update now playing bar
             document.querySelector('.now-playing-title').textContent = currentSong.title || 'Unknown';
             document.querySelector('.now-playing-artist').textContent = currentSong.artist || 'Unknown Artist';
             document.querySelector('.now-playing-requester').textContent = `Requested by ${currentSong.requestedByName || currentSong.requestedBy || 'Someone'}`;
+
+            // Init lyrics if available and not already loaded
+            if (!lyricsEngine && currentSong.lrcData) {
+                initLyricsEngine(currentSong.lrcData);
+            }
         }
 
         function renderQueue() {
