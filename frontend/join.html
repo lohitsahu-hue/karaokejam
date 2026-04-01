@@ -1612,11 +1612,30 @@
             >
             <button id="searchBtn">Search</button>
           </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <div style="flex:1;height:1px;background:var(--border-color);"></div>
+            <span style="color:var(--text-secondary);font-size:0.8rem;">or</span>
+            <div style="flex:1;height:1px;background:var(--border-color);"></div>
+          </div>
+          <input type="file" id="audioFileInput" accept=".mp3,.wav,.flac,.ogg,.aac,.m4a" style="display:none;">
+          <button id="uploadBtn" style="padding:0.75rem 1rem;background:linear-gradient(135deg, var(--accent-pink) 0%, #ff6b6b 100%);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;gap:0.5rem;min-height:44px;width:100%;">
+            <span style="font-size:1.1rem;">📁</span> Upload MP3 / Audio File
+          </button>
+          <div id="uploadDetails" style="display:none;background:var(--bg-darker);border:2px solid var(--border-color);border-radius:8px;padding:0.75rem 1rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+              <span style="font-size:1.1rem;">🎵</span>
+              <span id="uploadFileName" style="color:var(--text-primary);font-size:0.85rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+              <button id="uploadClearBtn" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:1rem;">✕</button>
+            </div>
+            <input type="text" id="uploadTitle" placeholder="Song title (optional)" style="width:100%;padding:0.5rem 0.75rem;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.85rem;margin-bottom:0.4rem;box-sizing:border-box;">
+            <input type="text" id="uploadArtist" placeholder="Artist (optional)" style="width:100%;padding:0.5rem 0.75rem;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.85rem;margin-bottom:0.5rem;box-sizing:border-box;">
+            <button id="uploadSubmitBtn" style="width:100%;padding:0.65rem;background:linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);color:white;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:0.9rem;">Add to Queue</button>
+          </div>
         </div>
         <div class="results-container" id="resultsContainer">
           <div class="empty-state">
             <div class="empty-state-icon">🔍</div>
-            <div class="empty-state-text">Search for songs to add to the queue</div>
+            <div class="empty-state-text">Search for songs or upload your own audio</div>
           </div>
         </div>
       </div>
@@ -1934,6 +1953,68 @@
     document.getElementById('searchBtn').addEventListener('click', performSearch);
     document.getElementById('searchInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') performSearch();
+    });
+
+    // ==================== UPLOAD ====================
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+      document.getElementById('audioFileInput').click();
+    });
+
+    document.getElementById('audioFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('uploadFileName').textContent = file.name;
+      const nameNoExt = file.name.replace(/\.[^.]+$/, '');
+      document.getElementById('uploadTitle').value = nameNoExt;
+      document.getElementById('uploadArtist').value = '';
+      document.getElementById('uploadDetails').style.display = 'block';
+    });
+
+    document.getElementById('uploadClearBtn').addEventListener('click', () => {
+      document.getElementById('audioFileInput').value = '';
+      document.getElementById('uploadDetails').style.display = 'none';
+    });
+
+    document.getElementById('uploadSubmitBtn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('audioFileInput');
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const title = document.getElementById('uploadTitle').value.trim() || file.name.replace(/\.[^.]+$/, '');
+      const artist = document.getElementById('uploadArtist').value.trim();
+      const submitBtn = document.getElementById('uploadSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Uploading...';
+
+      try {
+        const formData = new FormData();
+        formData.append('audio', file);
+        formData.append('title', title);
+        formData.append('artist', artist);
+        formData.append('requestedBy', app.guestId);
+        formData.append('requestedByName', app.guestName);
+
+        const response = await fetch(`/api/rooms/${app.roomId}/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || 'Upload failed');
+        }
+
+        fileInput.value = '';
+        document.getElementById('uploadDetails').style.display = 'none';
+        submitBtn.textContent = 'Added!';
+        setTimeout(() => { submitBtn.disabled = false; submitBtn.textContent = 'Add to Queue'; }, 2000);
+        document.querySelectorAll('.tab-btn')[1].click();
+      } catch (error) {
+        console.error('Upload failed:', error);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add to Queue';
+        alert('Upload failed: ' + error.message);
+      }
     });
 
     async function performSearch() {

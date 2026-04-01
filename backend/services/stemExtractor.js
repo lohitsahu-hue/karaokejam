@@ -356,6 +356,123 @@ async function fullPipeline(youtubeId, jobId) {
   return localPipeline(youtubeId, jobId);
 }
 
+// Pipeline for uploaded audio files (skips YouTube download)
+async function fullPipelineFromFile(audioPath, jobId) {
+  ensureDirs();
+
+  if (config.demucs.mode === 'runpod') {
+    return runpodPipelineFromFile(audioPath, jobId);
+  }
+  // Local mode: just run separation directly
+  const stems = await separateStems(audioPath, jobId);
+  if (stems.vocals) {
+    const stemDir = path.dirname(stems.vocals);
+    const splits = await midSideSplit(stems.vocals, stemDir);
+    delete stems.vocals;
+    Object.assign(stems, splits);
+  }
+  try { fs.unlinkSync(audioPath); } catch (e) {}
+  return stems;
+}
+
+// RunPod pipeline for uploaded files
+async function runpodPipelineFromFile(audioPath, jobId) {
+  const { apiKey, endpointId } = config.runpod;
+  if (!apiKey || !endpointId) {
+    throw new Error('RunPod API key and endpoint ID required');
+  }
+  const baseUrl = `https://api.runpod.ai/v2/${endpointId}`;
+  const headers = {
+    'Authorization': `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+  };
+
+  const audioBuffer = fs.readFileSync(audioPath);
+  const audioBase64 = audioBuffer.toString('base64');
+  log.info(`RunPod (upload): audio file ${(audioBuffer.length / 1024 / 1024).toFixed(1)} MB, sending to GPU...`);
+  try { fs.unlinkSync(audioPath); } catch (e) {}
+
+  if (runpodPipeline._onProgress) {
+    runpodPipeline._onProgress({ phase: 'Sending to GPU...', elapsed: 0, status: 'UPLOADING' });
+  }
+
+  const submitRes = await fetch(`${baseUrl}/run`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      input: {
+        audio_base64: audioBase64,
+        job_id: jobId,
+        model: config.demucs.model,
+      },
+    }),
+  });
+
+  if (!submitRes.ok) {
+    const errText = await submitRes.text();
+    throw new Error(`RunPod submit failed (${submitRes.status}): ${errText}`);
+  }
+
+  const submitData = await submitRes.json();
+  const runpodJobId = submitData.id;
+  log.info(`RunPod (upload): job submitted → ${runpodJobId}`);
+
+  // Poll for completion
+  const POLL_INTERVAL = 5000;
+  const MAX_WAIT = 10 * 60 * 1000;
+  const startTime = Date.now();
+  while (Date.now() - startTime < MAX_WAIT) {
+    await sleep(POLL_INTERVAL);
+    let statusRes;
+    try {
+      statusRes = await fetch(`${baseUrl}/status/${runpodJobId}`, { headers });
+    } catch (fetchErr) {
+      log.warn(`RunPod: status fetch error: ${fetchErr.message}`);
+      continue;
+    }
+    if (!statusRes.ok) continue;
+
+    const statusData = await statusRes.json();
+    const status = statusData.status;
+
+    if (status === 'IN_QUEUE' || status === 'IN_PROGRESS') {
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      const phase = status === 'IN_QUEUE' ? 'Waiting for GPU...' : 'Separating stems...';
+      log.info(`RunPod: ${status} (${elapsed}s elapsed)...`);
+      if (runpodPipeline._onProgress) {
+        runpodPipeline._onProgress({ phase, elapsed, status });
+      }
+      continue;
+    }
+
+    if (status === 'COMPLETED') {
+      const output = statusData.output;
+      if (!output) throw new Error('RunPod returned no output');
+      if (output.error) throw new Error(`RunPod error: ${output.error}`);
+      if (!output.stems) throw new Error('RunPod returned no stems');
+
+      log.info(`RunPod: job complete, decoding ${output.stem_names.length} stems...`);
+      const stems = {};
+      for (const [stemName, stemData] of Object.entries(output.stems)) {
+        const stemDir = path.join(config.storage.stemsDir, jobId, 'runpod');
+        fs.mkdirSync(stemDir, { recursive: true });
+        const stemPath = path.join(stemDir, `${stemName}.ogg`);
+        const buf = Buffer.from(stemData.base64, 'base64');
+        fs.writeFileSync(stemPath, buf);
+        log.info(`RunPod: saved ${stemName} (${(buf.length / 1024 / 1024).toFixed(1)} MB)`);
+        stems[stemName] = stemPath;
+      }
+      return stems;
+    }
+
+    if (status === 'FAILED') {
+      const errMsg = statusData.output?.error || statusData.error || 'Unknown error';
+      throw new Error(`RunPod job FAILED: ${JSON.stringify(errMsg)}`);
+    }
+  }
+  throw new Error('RunPod job timed out');
+}
+
 function getStemPath(jobId, stemName) {
   const stemDir = path.join(config.storage.stemsDir, jobId);
   if (!fs.existsSync(stemDir)) return null;
@@ -377,4 +494,4 @@ function getStemPath(jobId, stemName) {
   return findFile(stemDir, stemName);
 }
 
-module.exports = { downloadYouTube, separateStems, fullPipeline, getStemPath, runpodPipeline };
+module.exports = { downloadYouTube, separateStems, fullPipeline, fullPipelineFromFile, getStemPath, runpodPipeline };
