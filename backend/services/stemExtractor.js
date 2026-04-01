@@ -204,14 +204,27 @@ async function runpodPipeline(youtubeId, jobId) {
     'Content-Type': 'application/json',
   };
 
-  // 1. Submit the job
-  log.info(`RunPod: submitting job ${jobId} for ${youtubeId}...`);
+  // 1. Download audio locally first (avoids YouTube bot detection on RunPod datacenter IPs)
+  log.info(`RunPod: downloading audio for ${youtubeId} locally...`);
+  if (runpodPipeline._onProgress) {
+    runpodPipeline._onProgress({ phase: 'Downloading audio...', elapsed: 0, status: 'DOWNLOADING' });
+  }
+  const audioPath = await downloadYouTube(youtubeId, jobId);
+  const audioBuffer = fs.readFileSync(audioPath);
+  const audioBase64 = audioBuffer.toString('base64');
+  log.info(`RunPod: audio downloaded (${(audioBuffer.length / 1024 / 1024).toFixed(1)} MB), sending to GPU...`);
+
+  // Clean up local audio file
+  try { fs.unlinkSync(audioPath); } catch (e) { /* ignore */ }
+
+  // 2. Submit the job with audio data
+  log.info(`RunPod: submitting job ${jobId} with audio data...`);
   const submitRes = await fetch(`${baseUrl}/run`, {
     method: 'POST',
     headers,
     body: JSON.stringify({
       input: {
-        youtube_id: youtubeId,
+        audio_base64: audioBase64,
         job_id: jobId,
         model: config.demucs.model,
       },
