@@ -19,7 +19,7 @@ module.exports = {
   },
 
   demucs: {
-    model: process.env.DEMUCS_MODEL || 'htdemucs',
+    model: process.env.DEMUCS_MODEL || 'hdemucs_mmi',
     mode: process.env.DEMUCS_MODE || 'local', // 'local' or 'runpod'
   },
 
