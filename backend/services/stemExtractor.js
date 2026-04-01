@@ -18,21 +18,39 @@ async function downloadYouTube(youtubeId, jobId) {
   ensureDirs();
   const outPath = path.join(config.storage.downloadsDir, `${jobId}.wav`);
 
-  // yt-dlp with EJS challenge solver + node runtime (required for YouTube 2025+)
+  // Write YouTube cookies to file if available (bypasses bot detection on server IPs)
+  const cookiesPath = path.join(config.storage.downloadsDir, 'yt_cookies.txt');
+  if (process.env.YT_COOKIES_B64 && !fs.existsSync(cookiesPath)) {
+    try {
+      const cookieData = Buffer.from(process.env.YT_COOKIES_B64, 'base64').toString('utf-8');
+      fs.writeFileSync(cookiesPath, cookieData);
+      log.info(`yt-dlp: wrote YouTube cookies file (${cookieData.length} bytes)`);
+    } catch (e) {
+      log.warn(`yt-dlp: failed to write cookies file: ${e.message}`);
+    }
+  }
+
+  // yt-dlp with cookies + EJS challenge solver
   return new Promise((resolve, reject) => {
     const url = `https://www.youtube.com/watch?v=${youtubeId}`;
     const args = [
       '--js-runtimes', 'node',
       '--remote-components', 'ejs:github',
       '--extractor-args', 'youtube:player_client=web',
+    ];
+    // Add cookies if available
+    if (fs.existsSync(cookiesPath)) {
+      args.push('--cookies', cookiesPath);
+      log.info('yt-dlp: using YouTube cookies');
+    }
+    args.push(
       '-x',
       '--audio-format', 'wav',
       '--audio-quality', '0',
       '-o', outPath,
       '--no-playlist',
-      '--no-warnings',
       url,
-    ];
+    );
     log.info(`yt-dlp: downloading ${youtubeId}...`);
     const proc = spawn('python3', ['-m', 'yt_dlp', ...args]);
 
