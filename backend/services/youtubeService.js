@@ -8,15 +8,14 @@ function searchYouTube(query, maxResults = 8) {
       return reject(new Error('YOUTUBE_API_KEY not configured'));
     }
 
-    // Prioritize original audio versions — exclude karaoke/instrumental/covers/lyric videos
-    // since the app does its own stem separation via Demucs
-    const searchQuery = query + ' official audio -karaoke -instrumental -cover -"with lyrics" -"lyrical video" -"lyrics video"';
+    // Keep query clean — let YouTube rank naturally, then post-filter junk
+    const searchQuery = query;
     const params = new URLSearchParams({
       part: 'snippet',
       q: searchQuery,
       type: 'video',
       videoCategoryId: '10', // Music
-      maxResults: String(Math.min(maxResults * 2, 20)), // fetch extra, filter after
+      maxResults: String(Math.min(maxResults * 3, 25)), // fetch extra, post-filter
       key: config.youtube.apiKey,
     });
 
@@ -40,9 +39,12 @@ function searchYouTube(query, maxResults = 8) {
             publishedAt: item.snippet.publishedAt,
           }));
 
-          // Post-filter: remove karaoke, lyrics, instrumental, cover versions
-          const junkPattern = /\b(karaoke|instrumental|cover|with\s+lyrics|lyric(s|al)?\s*(video)?|sing\s*along|backing\s*track)\b/i;
-          const filtered = rawResults.filter(r => !junkPattern.test(r.title));
+          // Post-filter: remove karaoke, lyrics-only, instrumental, cover, remix, slowed versions
+          const junkPattern = /\b(karaoke|instrumental|cover|unplugged|with\s+lyrics|lyric(s|al)\b|sing\s*along|backing\s*track|slowed?\s*(\+|&|and)\s*reverb|remix|8\s*d\s*audio|lofi|jukebox)\b/i;
+          const junkChannelPattern = /\b(karaoke|lyrics?\s*(video|hub|world)|reverb|lofi)\b/i;
+          const filtered = rawResults.filter(r =>
+            !junkPattern.test(r.title) && !junkChannelPattern.test(r.channel)
+          );
           // Fall back to raw results if filtering removed everything
           const results = filtered.length > 0 ? filtered.slice(0, maxResults) : rawResults.slice(0, maxResults);
 
