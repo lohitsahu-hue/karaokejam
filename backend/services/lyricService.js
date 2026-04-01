@@ -49,13 +49,23 @@ function parseLRC(lrcText) {
 function cleanTitle(raw) {
   if (!raw) return '';
   let t = raw;
-  // Remove common YouTube suffixes/prefixes
+  // Remove common YouTube suffixes/prefixes in parens/brackets
   t = t.replace(/\s*[\(\[](official\s*(music\s*)?video|full\s*video|lyric\s*video|audio|hd|hq|4k|1080p|visualizer|mv|ft\.?[^)\]]*|feat\.?[^)\]]*|video\s*song|with\s*lyrics)[\)\]]/gi, '');
-  // Remove text after pipes, dashes with extra info
+  // Remove text after pipes (usually movie/channel info)
   t = t.replace(/\s*[|].*$/g, '');
   // Remove "Full Video - MovieName" pattern
   t = t.replace(/\s*full\s*video\s*[-–—]\s*.*/gi, '');
-  // Remove trailing " - Artist Name" if it looks like channel info
+  // Remove "Full Song" / "Full Video Song" / "Full Audio" / "Video Song"
+  t = t.replace(/\s*(full\s+)?(video\s+)?song(\s+video)?/gi, '');
+  t = t.replace(/\s*full\s+audio/gi, '');
+  // Remove "Lyrical Video", "Lyrical", "With Lyrics", "Lyrics Video" etc.
+  t = t.replace(/\s*lyrical(\s+video)?/gi, '');
+  t = t.replace(/\s*(with\s+)?lyrics\s*(video)?/gi, '');
+  // Remove "HD", "HQ", "4K", "1080p" standalone
+  t = t.replace(/\s*\b(hd|hq|4k|1080p|720p)\b\s*/gi, '');
+  // Remove actor/cast names after pipe or dash (e.g. "| Ranveer Singh, Sonakshi Sinha")
+  // Already handled by pipe removal above
+  // Remove trailing " - Artist Name" if it looks like channel/meta info
   t = t.replace(/\s*[-–—]\s*(official|lyric|audio|video|full|hd|hq|visuali).*/gi, '');
   // Remove emojis and special unicode
   t = t.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FEFF}]/gu, '');

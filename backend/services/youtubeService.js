@@ -8,15 +8,15 @@ function searchYouTube(query, maxResults = 8) {
       return reject(new Error('YOUTUBE_API_KEY not configured'));
     }
 
-    // Prioritize original audio versions — exclude karaoke/instrumental/covers
+    // Prioritize original audio versions — exclude karaoke/instrumental/covers/lyric videos
     // since the app does its own stem separation via Demucs
-    const searchQuery = query + ' -karaoke -instrumental -cover -lyrics';
+    const searchQuery = query + ' official audio -karaoke -instrumental -cover -"with lyrics" -"lyrical video" -"lyrics video"';
     const params = new URLSearchParams({
       part: 'snippet',
       q: searchQuery,
       type: 'video',
       videoCategoryId: '10', // Music
-      maxResults: String(maxResults),
+      maxResults: String(Math.min(maxResults * 2, 20)), // fetch extra, filter after
       key: config.youtube.apiKey,
     });
 
@@ -32,13 +32,21 @@ function searchYouTube(query, maxResults = 8) {
             log.error('YouTube API error:', json.error.message);
             return reject(new Error(json.error.message));
           }
-          const results = (json.items || []).map(item => ({
+          const rawResults = (json.items || []).map(item => ({
             youtubeId: item.id.videoId,
             title: item.snippet.title,
             channel: item.snippet.channelTitle,
             thumbnail: item.snippet.thumbnails?.medium?.url || '',
             publishedAt: item.snippet.publishedAt,
           }));
+
+          // Post-filter: remove karaoke, lyrics, instrumental, cover versions
+          const junkPattern = /\b(karaoke|instrumental|cover|with\s+lyrics|lyric(s|al)?\s*(video)?|sing\s*along|backing\s*track)\b/i;
+          const filtered = rawResults.filter(r => !junkPattern.test(r.title));
+          // Fall back to raw results if filtering removed everything
+          const results = filtered.length > 0 ? filtered.slice(0, maxResults) : rawResults.slice(0, maxResults);
+
+          log.info(`YouTube search: "${query}" → ${rawResults.length} raw, ${filtered.length} after filter, returning ${results.length}`);
 
           // Get durations via videos endpoint
           if (results.length > 0) {
