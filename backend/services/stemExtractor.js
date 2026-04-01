@@ -14,19 +14,23 @@ function ensureDirs() {
 //  LOCAL MODE (yt-dlp + Demucs on this machine)
 // ─────────────────────────────────────────────
 
-function downloadYouTube(youtubeId, jobId) {
+async function downloadYouTube(youtubeId, jobId) {
   ensureDirs();
   const outPath = path.join(config.storage.downloadsDir, `${jobId}.wav`);
 
+  // yt-dlp with EJS challenge solver + node runtime (required for YouTube 2025+)
   return new Promise((resolve, reject) => {
     const url = `https://www.youtube.com/watch?v=${youtubeId}`;
     const args = [
+      '--js-runtimes', 'node',
+      '--remote-components', 'ejs:github',
+      '--extractor-args', 'youtube:player_client=web',
       '-x',
       '--audio-format', 'wav',
       '--audio-quality', '0',
-      '--js-runtimes', 'node',
       '-o', outPath,
       '--no-playlist',
+      '--no-warnings',
       url,
     ];
     log.info(`yt-dlp: downloading ${youtubeId}...`);
