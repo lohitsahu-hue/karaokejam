@@ -1,9 +1,86 @@
-// Search View — YouTube song search
+// Search View — Audio upload (YouTube search disabled — bot detection blocks server-side downloads)
 const SearchView = {
   init() {
-    document.getElementById('btn-search').addEventListener('click', () => this.doSearch());
-    document.getElementById('search-input').addEventListener('keydown', (e) => {
+    // Legacy search wiring (search bar is hidden in HTML; keep listeners safe)
+    const searchBtn = document.getElementById('btn-search');
+    const searchInp = document.getElementById('search-input');
+    if (searchBtn) searchBtn.addEventListener('click', () => this.doSearch());
+    if (searchInp) searchInp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this.doSearch();
+    });
+
+    // Upload wiring
+    this.initUpload();
+  },
+
+  initUpload() {
+    const uploadBtn = document.getElementById('btn-upload');
+    const fileInput = document.getElementById('upload-file-input');
+    const clearBtn = document.getElementById('btn-upload-clear');
+    const submitBtn = document.getElementById('btn-upload-submit');
+    const details = document.getElementById('upload-details');
+    const filenameEl = document.getElementById('upload-filename');
+    const titleInp = document.getElementById('upload-title');
+    const artistInp = document.getElementById('upload-artist');
+
+    if (!uploadBtn || !fileInput) return;
+
+    uploadBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      filenameEl.textContent = file.name;
+      titleInp.value = file.name.replace(/\.[^.]+$/, '');
+      artistInp.value = '';
+      details.style.display = 'block';
+    });
+
+    clearBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      details.style.display = 'none';
+    });
+
+    submitBtn.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      if (!App.roomId) {
+        alert('No room — create or join a room first.');
+        return;
+      }
+
+      const title = titleInp.value.trim() || file.name.replace(/\.[^.]+$/, '');
+      const artist = artistInp.value.trim();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Uploading...';
+
+      try {
+        const fd = new FormData();
+        fd.append('audio', file);
+        fd.append('title', title);
+        fd.append('artist', artist);
+        fd.append('requestedBy', App.guestId || 'host');
+        fd.append('requestedByName', App.userName || 'Host');
+
+        await API.uploadAudio(App.roomId, fd);
+
+        // Reset form, show success, close panel
+        fileInput.value = '';
+        details.style.display = 'none';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add to Queue';
+
+        // Brief success toast on the upload button
+        const original = uploadBtn.innerHTML;
+        uploadBtn.innerHTML = '<span style="font-size:18px;">✓</span> Added to queue!';
+        setTimeout(() => { uploadBtn.innerHTML = original; }, 2000);
+      } catch (err) {
+        console.error('Upload failed:', err);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add to Queue';
+        alert('Upload failed: ' + err.message);
+      }
     });
   },
 

@@ -35,6 +35,20 @@ const API = {
   getQueue(roomId) { return this.get(`/api/rooms/${roomId}/queue`); },
   removeFromQueue(roomId, itemId) { return this.del(`/api/rooms/${roomId}/queue/${itemId}`); },
 
+  // Upload audio file (FormData)
+  async uploadAudio(roomId, formData) {
+    const res = await fetch(this.base + `/api/rooms/${roomId}/upload`, {
+      method: 'POST',
+      body: formData, // browser sets multipart Content-Type
+    });
+    if (!res.ok) {
+      let msg = 'Upload failed';
+      try { const j = await res.json(); msg = j.error || msg; } catch (e) {}
+      throw new Error(msg);
+    }
+    return res.json();
+  },
+
   // Jobs
   getJob(jobId) { return this.get(`/api/jobs/${jobId}`); },
 

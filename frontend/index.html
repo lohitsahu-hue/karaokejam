@@ -1323,11 +1323,32 @@
         <div class="room-content">
             <div class="search-panel">
                 <div class="search-header">
-                    <h2>Search Songs</h2>
+                    <h2>Add Song</h2>
                 </div>
-                <div class="search-controls">
-                    <input type="text" id="search-input" placeholder="Search by title or artist...">
+                <!-- Hidden legacy search controls (kept so existing JS doesn't error) -->
+                <div class="search-controls" style="display:none;">
+                    <input type="text" id="search-input">
                     <button id="btn-search">Search</button>
+                </div>
+                <!-- Upload audio file -->
+                <div class="upload-controls" style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+                    <input type="file" id="upload-file-input" accept=".mp3,.wav,.flac,.ogg,.aac,.m4a" style="display:none;">
+                    <button id="btn-upload" style="padding:14px 20px;background:linear-gradient(135deg,#7c3aed 0%,#ec4899 100%);border:none;color:white;border-radius:8px;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.3s ease;">
+                        <span style="font-size:18px;">📁</span> Upload Audio File
+                    </button>
+                    <div style="text-align:center;color:#888;font-size:12px;">
+                        MP3, WAV, FLAC, OGG, AAC, M4A · max 50 MB
+                    </div>
+                    <div id="upload-details" style="display:none;background:rgba(50,50,80,0.6);border:1.5px solid rgba(167,139,250,0.3);border-radius:8px;padding:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                            <span style="font-size:18px;">🎵</span>
+                            <span id="upload-filename" style="color:#e5e7eb;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+                            <button id="btn-upload-clear" style="background:none;border:none;color:#888;cursor:pointer;font-size:16px;padding:0 4px;">✕</button>
+                        </div>
+                        <input type="text" id="upload-title" placeholder="Song title (optional)" style="width:100%;padding:8px 12px;background:rgba(30,30,50,0.8);border:1px solid rgba(167,139,250,0.3);border-radius:6px;color:#e5e7eb;font-size:13px;margin-bottom:8px;box-sizing:border-box;font-family:'Inter',sans-serif;">
+                        <input type="text" id="upload-artist" placeholder="Artist (optional)" style="width:100%;padding:8px 12px;background:rgba(30,30,50,0.8);border:1px solid rgba(167,139,250,0.3);border-radius:6px;color:#e5e7eb;font-size:13px;margin-bottom:10px;box-sizing:border-box;font-family:'Inter',sans-serif;">
+                        <button id="btn-upload-submit" style="width:100%;padding:10px;background:linear-gradient(135deg,#7c3aed 0%,#a78bfa 100%);border:none;color:white;border-radius:6px;font-weight:600;font-size:13px;cursor:pointer;">Add to Queue</button>
+                    </div>
                 </div>
                 <div id="search-results"></div>
             </div>
