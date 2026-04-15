@@ -42,7 +42,13 @@ const QueueView = {
         const midiLink = item.hasMidi && item.jobId
           ? `<a href="/api/songs/${item.jobId}/midi" download style="color:#a78bfa;text-decoration:none;">⬇ MIDI</a>`
           : '';
-        const parts = [keyStr, bpmStr, timeSigStr, chordsStr, midiLink].filter(Boolean).join(' · ');
+        const chartLink = item.jobId
+          ? `<a href="/api/songs/${item.jobId}/chart.txt" download style="color:#a78bfa;text-decoration:none;">⬇ Chart</a>`
+          : '';
+        const jsonLink = item.jobId
+          ? `<a href="/api/songs/${item.jobId}/chords" download="chords.json" style="color:#a78bfa;text-decoration:none;">⬇ JSON</a>`
+          : '';
+        const parts = [keyStr, bpmStr, timeSigStr, chordsStr, midiLink, chartLink, jsonLink].filter(Boolean).join(' · ');
         chordLine = `<div class="queue-item-chords" style="font-size:11px;color:#888;margin-top:2px;">${parts}</div>`;
       }
       return `

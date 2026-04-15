@@ -314,6 +314,68 @@ router.get('/songs/:jobId/midi', (req, res) => {
   res.sendFile(p);
 });
 
+// Human-readable chord chart — plain text. Shows chords with timing + bar
+// grouping (if time signature is known). Great for a quick glance or for
+// a musician to print out and play along with.
+router.get('/songs/:jobId/chart.txt', (req, res) => {
+  const p = getChordsPath(req.params.jobId);
+  if (!p) return res.status(404).send('Chord chart not found for this job');
+  try {
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    const chords = data.chords_quantized || data.chords || [];
+    const keyInfo = data.key_info;
+    const timing = data.timing_info;
+
+    const lines = [];
+    lines.push(`Chord Chart — job ${req.params.jobId}`);
+    lines.push('='.repeat(50));
+    if (keyInfo && keyInfo.key) {
+      lines.push(`Key: ${keyInfo.key} ${keyInfo.mode} (confidence ${keyInfo.confidence})`);
+    }
+    if (timing && timing.tempo_bpm) {
+      lines.push(`Tempo: ${Math.round(timing.tempo_bpm)} BPM · Time signature: ${timing.time_signature || 'unknown'}`);
+    }
+    lines.push(`Total chord segments: ${chords.length}`);
+    lines.push('');
+    lines.push('Time          Duration  Chord');
+    lines.push('-'.repeat(50));
+
+    function fmtTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = (s % 60).toFixed(2).padStart(5, '0');
+      return `${m}:${sec}`;
+    }
+
+    for (const c of chords) {
+      const dur = (c.end - c.start).toFixed(2);
+      lines.push(`${fmtTime(c.start).padEnd(13)} ${dur.padStart(6)}s   ${c.chord}`);
+    }
+
+    // Bar-grouped view at the end, if we have timing info
+    if (timing && timing.downbeats && timing.downbeats.length > 1) {
+      lines.push('');
+      lines.push('Bar-by-bar view');
+      lines.push('-'.repeat(50));
+      const downbeats = timing.downbeats;
+      for (let i = 0; i < downbeats.length; i++) {
+        const barStart = downbeats[i];
+        const barEnd = i + 1 < downbeats.length ? downbeats[i + 1] : (chords.length ? chords[chords.length - 1].end : barStart + 2);
+        // Chords that intersect this bar
+        const barChords = chords.filter(c => c.start < barEnd && c.end > barStart);
+        const labels = barChords.map(c => c.chord).filter((v, idx, arr) => idx === 0 || v !== arr[idx - 1]);
+        lines.push(`Bar ${(i + 1).toString().padStart(3)} [${fmtTime(barStart)}]  | ${labels.join(' | ')} |`);
+      }
+    }
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${req.params.jobId}_chart.txt"`);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.send(lines.join('\n'));
+  } catch (e) {
+    res.status(500).send('Failed to build chart: ' + e.message);
+  }
+});
+
 // ── Job status ──
 
 router.get('/jobs/:jobId', (req, res) => {
