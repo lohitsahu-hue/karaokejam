@@ -32,6 +32,7 @@ function saveChordArtifacts(jobId, output) {
       const chordsPath = path.join(config.storage.chordsDir, `${jobId}.json`);
       fs.writeFileSync(chordsPath, JSON.stringify({
         chords: output.chords || [],
+        chords_quantized: output.chords_quantized || null,
         key_info: output.key_info || null,
         timing_info: output.timing_info || null,
         generated_at: new Date().toISOString(),
