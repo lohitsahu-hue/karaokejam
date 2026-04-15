@@ -161,16 +161,17 @@ async function runUploadPipeline(roomId, queueItemId, jobId, audioPath, title, a
     }
 
     const pipelineResult = await fullPipelineFromFile(audioPath, jobId);
-    const { stems, chords, keyInfo, chordCount, midiPath } = pipelineResult;
+    const { stems, chords, keyInfo, chordCount, midiPath, timingInfo } = pipelineResult;
     db.updateQueueItemStatus(roomId, queueItemId, 'ready', {
       stems,
       chords,
       keyInfo,
       chordCount,
+      timingInfo,
       hasMidi: !!midiPath,
       jobId,
     });
-    db.updateJob(jobId, { status: 'completed', completedAt: Date.now(), output: { stems, chordCount, keyInfo } });
+    db.updateJob(jobId, { status: 'completed', completedAt: Date.now(), output: { stems, chordCount, keyInfo, timingInfo } });
 
     try {
       const lyrics = await fetchLyrics(title, artist);
@@ -220,17 +221,18 @@ async function runPipeline(roomId, queueItemId, jobId, youtubeId, title, artist)
     }
 
     const pipelineResult = await fullPipeline(youtubeId, jobId);
-    const { stems, chords, keyInfo, chordCount, midiPath } = pipelineResult;
+    const { stems, chords, keyInfo, chordCount, midiPath, timingInfo } = pipelineResult;
 
     db.updateQueueItemStatus(roomId, queueItemId, 'ready', {
       stems,
       chords,
       keyInfo,
       chordCount,
+      timingInfo,
       hasMidi: !!midiPath,
       jobId,
     });
-    db.updateJob(jobId, { status: 'completed', completedAt: Date.now(), output: { stems, chordCount, keyInfo } });
+    db.updateJob(jobId, { status: 'completed', completedAt: Date.now(), output: { stems, chordCount, keyInfo, timingInfo } });
 
     // Step 2: Fetch lyrics (parallel-ish, non-blocking)
     try {

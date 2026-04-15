@@ -13,23 +13,32 @@ function ensureDirs() {
 }
 
 /**
- * Save chord JSON + MIDI returned by the RunPod handler.
- * Returns { chordsPath, midiPath, keyInfo, chordCount }.
+ * Save chord JSON + MIDI + timing info returned by the RunPod handler.
+ * Returns { chordsPath, midiPath, keyInfo, chordCount, timingInfo }.
  */
 function saveChordArtifacts(jobId, output) {
-  const result = { chordsPath: null, midiPath: null, keyInfo: null, chordCount: 0 };
+  const result = {
+    chordsPath: null,
+    midiPath: null,
+    keyInfo: null,
+    chordCount: 0,
+    timingInfo: null,
+  };
   try {
-    if (Array.isArray(output.chords) && output.chords.length > 0) {
+    const hasChords = Array.isArray(output.chords) && output.chords.length > 0;
+    const hasTiming = !!output.timing_info;
+    if (hasChords || hasTiming) {
       fs.mkdirSync(config.storage.chordsDir, { recursive: true });
       const chordsPath = path.join(config.storage.chordsDir, `${jobId}.json`);
       fs.writeFileSync(chordsPath, JSON.stringify({
-        chords: output.chords,
+        chords: output.chords || [],
         key_info: output.key_info || null,
+        timing_info: output.timing_info || null,
         generated_at: new Date().toISOString(),
       }, null, 2));
       result.chordsPath = chordsPath;
-      result.chordCount = output.chords.length;
-      log.info(`Chords: saved ${output.chords.length} segments → ${chordsPath}`);
+      result.chordCount = hasChords ? output.chords.length : 0;
+      log.info(`Chords+timing: saved ${result.chordCount} chords + timing=${hasTiming} → ${chordsPath}`);
     }
     if (output.chord_midi_base64) {
       fs.mkdirSync(config.storage.midiDir, { recursive: true });
@@ -41,6 +50,11 @@ function saveChordArtifacts(jobId, output) {
     if (output.key_info) {
       result.keyInfo = output.key_info;
       log.info(`Key: ${output.key_info.key} ${output.key_info.mode} (conf=${output.key_info.confidence})`);
+    }
+    if (output.timing_info) {
+      result.timingInfo = output.timing_info;
+      const ti = output.timing_info;
+      log.info(`Timing: ${ti.tempo_bpm} BPM, ${ti.time_signature}, ${(ti.beats || []).length} beats (conf=${ti.beat_confidence})`);
     }
   } catch (e) {
     log.warn(`saveChordArtifacts failed: ${e.message}`);

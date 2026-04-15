@@ -28,15 +28,21 @@ const QueueView = {
     }
 
     container.innerHTML = queue.map((item, i) => {
-      // Chord info line (shown when detection has succeeded)
+      // Chord + timing info line (shown when detection has succeeded)
       let chordLine = '';
-      if (item.keyInfo || item.chordCount) {
-        const keyStr = item.keyInfo ? `Key: <strong style="color:#c7a8ff;">${item.keyInfo.key} ${item.keyInfo.mode}</strong>` : '';
+      if (item.keyInfo || item.chordCount || item.timingInfo) {
+        const keyStr = item.keyInfo ? `<strong style="color:#c7a8ff;">${item.keyInfo.key} ${item.keyInfo.mode}</strong>` : '';
+        const bpmStr = item.timingInfo && item.timingInfo.tempo_bpm
+          ? `${Math.round(item.timingInfo.tempo_bpm)} BPM`
+          : '';
+        const timeSigStr = item.timingInfo && item.timingInfo.time_signature
+          ? item.timingInfo.time_signature
+          : '';
         const chordsStr = item.chordCount ? `${item.chordCount} chords` : '';
         const midiLink = item.hasMidi && item.jobId
           ? `<a href="/api/songs/${item.jobId}/midi" download style="color:#a78bfa;text-decoration:none;">⬇ MIDI</a>`
           : '';
-        const parts = [keyStr, chordsStr, midiLink].filter(Boolean).join(' · ');
+        const parts = [keyStr, bpmStr, timeSigStr, chordsStr, midiLink].filter(Boolean).join(' · ');
         chordLine = `<div class="queue-item-chords" style="font-size:11px;color:#888;margin-top:2px;">${parts}</div>`;
       }
       return `
