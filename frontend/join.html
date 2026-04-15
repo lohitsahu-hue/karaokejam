@@ -1596,31 +1596,27 @@
     <!-- Tab Container -->
     <div class="tab-container">
       <div class="tab-buttons">
-        <button class="tab-btn active" data-tab="search">Search</button>
+        <button class="tab-btn active" data-tab="search">Add Song</button>
         <button class="tab-btn" data-tab="queue">Queue</button>
       </div>
 
-      <!-- Search Tab -->
+      <!-- Add Song Tab (Upload only) -->
       <div class="tab-content active" id="searchTab">
         <div class="search-section">
-          <div class="search-bar">
-            <input
-              type="text"
-              id="searchInput"
-              placeholder="Song name, artist..."
-              autocomplete="off"
-            >
+          <!-- Hidden YouTube search (kept in DOM so existing JS doesn't break) -->
+          <div class="search-bar" style="display:none;">
+            <input type="text" id="searchInput" autocomplete="off">
             <button id="searchBtn">Search</button>
           </div>
-          <div style="display:flex;align-items:center;gap:0.5rem;">
-            <div style="flex:1;height:1px;background:var(--border-color);"></div>
-            <span style="color:var(--text-secondary);font-size:0.8rem;">or</span>
-            <div style="flex:1;height:1px;background:var(--border-color);"></div>
-          </div>
+
           <input type="file" id="audioFileInput" accept=".mp3,.wav,.flac,.ogg,.aac,.m4a" style="display:none;">
-          <button id="uploadBtn" style="padding:0.75rem 1rem;background:linear-gradient(135deg, var(--accent-pink) 0%, #ff6b6b 100%);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;gap:0.5rem;min-height:44px;width:100%;">
-            <span style="font-size:1.1rem;">📁</span> Upload MP3 / Audio File
+          <button id="uploadBtn" style="padding:1rem 1rem;background:linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;gap:0.5rem;min-height:56px;width:100%;">
+            <span style="font-size:1.3rem;">📁</span> Upload Audio File
           </button>
+          <div style="text-align:center;color:var(--text-secondary);font-size:0.75rem;line-height:1.5;">
+            MP3, WAV, FLAC, OGG, AAC, M4A · max 50 MB
+          </div>
+
           <div id="uploadDetails" style="display:none;background:var(--bg-darker);border:2px solid var(--border-color);border-radius:8px;padding:0.75rem 1rem;">
             <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
               <span style="font-size:1.1rem;">🎵</span>
@@ -1634,8 +1630,11 @@
         </div>
         <div class="results-container" id="resultsContainer">
           <div class="empty-state">
-            <div class="empty-state-icon">🔍</div>
-            <div class="empty-state-text">Search for songs or upload your own audio</div>
+            <div class="empty-state-icon">🎤</div>
+            <div class="empty-state-text">Upload an audio file to add to the queue</div>
+            <div style="color:var(--text-secondary);font-size:0.8rem;margin-top:0.5rem;line-height:1.5;max-width:280px;">
+              We'll separate the vocals and music, sync the lyrics, and you'll be ready to sing.
+            </div>
           </div>
         </div>
       </div>
