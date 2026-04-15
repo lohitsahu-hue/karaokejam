@@ -375,6 +375,51 @@ async function fullPipelineFromFile(audioPath, jobId) {
   return stems;
 }
 
+/**
+ * Transcode any audio file to a compact OGG (Vorbis) suitable for sending to
+ * RunPod within its 10 MiB request body limit. Demucs handles OGG fine and
+ * resamples internally, so 128 kbps stereo is plenty for stem separation.
+ *
+ * Returns the path to the transcoded file (caller should delete after use).
+ * Falls back to original file if ffmpeg is not available.
+ */
+function transcodeForRunpod(audioPath, jobId) {
+  return new Promise((resolve) => {
+    const outPath = path.join(config.storage.downloadsDir, `${jobId}_compact.ogg`);
+    fs.mkdirSync(config.storage.downloadsDir, { recursive: true });
+
+    const proc = spawn('ffmpeg', [
+      '-y',
+      '-i', audioPath,
+      '-c:a', 'libvorbis',
+      '-b:a', '128k',          // 128 kbps stereo Vorbis
+      '-ac', '2',              // stereo (Demucs needs it for mid-side)
+      '-ar', '44100',          // 44.1 kHz (Demucs native rate)
+      '-vn',                   // strip any video/cover art
+      outPath,
+    ]);
+
+    let stderr = '';
+    proc.stderr.on('data', d => { stderr += d.toString(); });
+
+    proc.on('close', (code) => {
+      if (code !== 0 || !fs.existsSync(outPath)) {
+        log.warn(`ffmpeg transcode failed (code ${code}), using original. stderr: ${stderr.slice(-200)}`);
+        return resolve(audioPath);
+      }
+      const origSize = fs.statSync(audioPath).size;
+      const newSize = fs.statSync(outPath).size;
+      log.info(`Transcoded for RunPod: ${(origSize/1024/1024).toFixed(1)} MB → ${(newSize/1024/1024).toFixed(1)} MB`);
+      resolve(outPath);
+    });
+
+    proc.on('error', (err) => {
+      log.warn(`ffmpeg not available, sending original: ${err.message}`);
+      resolve(audioPath);
+    });
+  });
+}
+
 // RunPod pipeline for uploaded files
 async function runpodPipelineFromFile(audioPath, jobId) {
   const { apiKey, endpointId } = config.runpod;
@@ -387,10 +432,15 @@ async function runpodPipelineFromFile(audioPath, jobId) {
     'Content-Type': 'application/json',
   };
 
-  const audioBuffer = fs.readFileSync(audioPath);
+  // Transcode to compact OGG to fit under RunPod's 10 MiB request body limit.
+  // Base64 inflates by ~33%, so raw payload must stay below ~7.5 MB.
+  const compactPath = await transcodeForRunpod(audioPath, jobId);
+  const audioBuffer = fs.readFileSync(compactPath);
   const audioBase64 = audioBuffer.toString('base64');
-  log.info(`RunPod (upload): audio file ${(audioBuffer.length / 1024 / 1024).toFixed(1)} MB, sending to GPU...`);
+  log.info(`RunPod (upload): payload ${(audioBuffer.length / 1024 / 1024).toFixed(1)} MB raw, ${(audioBase64.length / 1024 / 1024).toFixed(1)} MB base64, sending to GPU...`);
+  // Clean up both the original upload and the transcoded copy
   try { fs.unlinkSync(audioPath); } catch (e) {}
+  if (compactPath !== audioPath) { try { fs.unlinkSync(compactPath); } catch (e) {} }
 
   if (runpodPipeline._onProgress) {
     runpodPipeline._onProgress({ phase: 'Sending to GPU...', elapsed: 0, status: 'UPLOADING' });
