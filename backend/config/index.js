@@ -16,6 +16,8 @@ module.exports = {
   storage: {
     stemsDir: path.resolve(process.env.STEMS_DIR || './storage/stems'),
     downloadsDir: path.resolve(process.env.STEMS_DIR || './storage', 'downloads'),
+    chordsDir: path.resolve(process.env.STEMS_DIR || './storage', 'chords'),
+    midiDir: path.resolve(process.env.STEMS_DIR || './storage', 'midi'),
   },
 
   demucs: {

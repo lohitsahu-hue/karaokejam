@@ -27,16 +27,30 @@ const QueueView = {
       return;
     }
 
-    container.innerHTML = queue.map((item, i) => `
-      <div class="queue-item ${item.status === 'playing' ? 'playing' : ''} ${item.status === 'downloading' || item.status === 'separating' ? 'downloading' : ''}" data-id="${item.id}">        <span class="queue-item-num">${i + 1}</span>
+    container.innerHTML = queue.map((item, i) => {
+      // Chord info line (shown when detection has succeeded)
+      let chordLine = '';
+      if (item.keyInfo || item.chordCount) {
+        const keyStr = item.keyInfo ? `Key: <strong style="color:#c7a8ff;">${item.keyInfo.key} ${item.keyInfo.mode}</strong>` : '';
+        const chordsStr = item.chordCount ? `${item.chordCount} chords` : '';
+        const midiLink = item.hasMidi && item.jobId
+          ? `<a href="/api/songs/${item.jobId}/midi" download style="color:#a78bfa;text-decoration:none;">⬇ MIDI</a>`
+          : '';
+        const parts = [keyStr, chordsStr, midiLink].filter(Boolean).join(' · ');
+        chordLine = `<div class="queue-item-chords" style="font-size:11px;color:#888;margin-top:2px;">${parts}</div>`;
+      }
+      return `
+      <div class="queue-item ${item.status === 'playing' ? 'playing' : ''} ${item.status === 'downloading' || item.status === 'separating' ? 'downloading' : ''}" data-id="${item.id}"><span class="queue-item-num">${i + 1}</span>
         <div class="queue-item-info">
           <div class="queue-item-title">${this.esc(item.title)}</div>
           <div class="queue-item-meta">${this.esc(item.requestedByName)}</div>
+          ${chordLine}
         </div>
         ${item.status === 'ready' ? `<button class="btn btn-primary btn-play-now pulse-glow" data-idx="${i}">▶ Play</button>` : item.status === 'playing' ? `<button class="btn btn-primary btn-open-mixer pulse-glow" data-idx="${i}">▶ Open Mixer</button>` : item.status === 'played' ? `<button class="btn btn-sm btn-replay" data-idx="${i}">↻ Replay</button>` : `<span class="queue-item-status ${item.status}">${this.statusLabel(item.status)}</span>`}
         ${App.isHost ? `<button class="btn btn-sm btn-remove" data-id="${item.id}" style="color:#ef4444;">&times;</button>` : ''}
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     // Play buttons
     container.querySelectorAll('.btn-play-now').forEach(btn => {

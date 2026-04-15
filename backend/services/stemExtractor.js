@@ -8,6 +8,44 @@ const log = require('../utils/logger');
 function ensureDirs() {
   fs.mkdirSync(config.storage.stemsDir, { recursive: true });
   fs.mkdirSync(config.storage.downloadsDir, { recursive: true });
+  if (config.storage.chordsDir) fs.mkdirSync(config.storage.chordsDir, { recursive: true });
+  if (config.storage.midiDir) fs.mkdirSync(config.storage.midiDir, { recursive: true });
+}
+
+/**
+ * Save chord JSON + MIDI returned by the RunPod handler.
+ * Returns { chordsPath, midiPath, keyInfo, chordCount }.
+ */
+function saveChordArtifacts(jobId, output) {
+  const result = { chordsPath: null, midiPath: null, keyInfo: null, chordCount: 0 };
+  try {
+    if (Array.isArray(output.chords) && output.chords.length > 0) {
+      fs.mkdirSync(config.storage.chordsDir, { recursive: true });
+      const chordsPath = path.join(config.storage.chordsDir, `${jobId}.json`);
+      fs.writeFileSync(chordsPath, JSON.stringify({
+        chords: output.chords,
+        key_info: output.key_info || null,
+        generated_at: new Date().toISOString(),
+      }, null, 2));
+      result.chordsPath = chordsPath;
+      result.chordCount = output.chords.length;
+      log.info(`Chords: saved ${output.chords.length} segments → ${chordsPath}`);
+    }
+    if (output.chord_midi_base64) {
+      fs.mkdirSync(config.storage.midiDir, { recursive: true });
+      const midiPath = path.join(config.storage.midiDir, `${jobId}.mid`);
+      fs.writeFileSync(midiPath, Buffer.from(output.chord_midi_base64, 'base64'));
+      result.midiPath = midiPath;
+      log.info(`MIDI: saved ${fs.statSync(midiPath).size} bytes → ${midiPath}`);
+    }
+    if (output.key_info) {
+      result.keyInfo = output.key_info;
+      log.info(`Key: ${output.key_info.key} ${output.key_info.mode} (conf=${output.key_info.confidence})`);
+    }
+  } catch (e) {
+    log.warn(`saveChordArtifacts failed: ${e.message}`);
+  }
+  return result;
 }
 
 // ─────────────────────────────────────────────
@@ -206,7 +244,8 @@ async function localPipeline(youtubeId, jobId) {
   }
 
   try { fs.unlinkSync(audioPath); } catch (e) { /* ignore */ }
-  return stems;
+  // Local mode doesn't do chord detection — return the same shape with nulls
+  return { stems, chords: null, chordsPath: null, midiPath: null, keyInfo: null, chordCount: 0 };
 }
 
 // ─────────────────────────────────────────────
@@ -330,7 +369,8 @@ async function runpodPipeline(youtubeId, jobId) {
         log.info(`RunPod: saved ${stemName} (${(buffer.length / 1024 / 1024).toFixed(1)} MB)`);
       }
 
-      return stems;
+      const chordArtifacts = saveChordArtifacts(jobId, output);
+      return { stems, ...chordArtifacts, chords: output.chords || null };
     }
 
     if (status === 'FAILED' || status === 'CANCELLED' || status === 'TIMED_OUT') {
@@ -372,7 +412,7 @@ async function fullPipelineFromFile(audioPath, jobId) {
     Object.assign(stems, splits);
   }
   try { fs.unlinkSync(audioPath); } catch (e) {}
-  return stems;
+  return { stems, chords: null, chordsPath: null, midiPath: null, keyInfo: null, chordCount: 0 };
 }
 
 /**
@@ -512,7 +552,8 @@ async function runpodPipelineFromFile(audioPath, jobId) {
         log.info(`RunPod: saved ${stemName} (${(buf.length / 1024 / 1024).toFixed(1)} MB)`);
         stems[stemName] = stemPath;
       }
-      return stems;
+      const chordArtifacts = saveChordArtifacts(jobId, output);
+      return { stems, ...chordArtifacts, chords: output.chords || null };
     }
 
     if (status === 'FAILED') {
@@ -544,4 +585,25 @@ function getStemPath(jobId, stemName) {
   return findFile(stemDir, stemName);
 }
 
-module.exports = { downloadYouTube, separateStems, fullPipeline, fullPipelineFromFile, getStemPath, runpodPipeline };
+function getChordsPath(jobId) {
+  if (!config.storage.chordsDir) return null;
+  const p = path.join(config.storage.chordsDir, `${jobId}.json`);
+  return fs.existsSync(p) ? p : null;
+}
+
+function getMidiPath(jobId) {
+  if (!config.storage.midiDir) return null;
+  const p = path.join(config.storage.midiDir, `${jobId}.mid`);
+  return fs.existsSync(p) ? p : null;
+}
+
+module.exports = {
+  downloadYouTube,
+  separateStems,
+  fullPipeline,
+  fullPipelineFromFile,
+  getStemPath,
+  getChordsPath,
+  getMidiPath,
+  runpodPipeline,
+};

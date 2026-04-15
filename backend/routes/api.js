@@ -6,7 +6,8 @@ const multer = require('multer');
 const db = require('../models/inMemory');
 const { searchYouTube } = require('../services/youtubeService');
 const { fetchLyrics } = require('../services/lyricService');
-const { fullPipeline, fullPipelineFromFile, getStemPath } = require('../services/stemExtractor');
+const { fullPipeline, fullPipelineFromFile, getStemPath, getChordsPath, getMidiPath } = require('../services/stemExtractor');
+const fs = require('fs');
 const config = require('../config');
 const log = require('../utils/logger');
 
@@ -159,9 +160,17 @@ async function runUploadPipeline(roomId, queueItemId, jobId, audioPath, title, a
       };
     }
 
-    const stems = await fullPipelineFromFile(audioPath, jobId);
-    db.updateQueueItemStatus(roomId, queueItemId, 'ready', { stems });
-    db.updateJob(jobId, { status: 'completed', completedAt: Date.now(), output: { stems } });
+    const pipelineResult = await fullPipelineFromFile(audioPath, jobId);
+    const { stems, chords, keyInfo, chordCount, midiPath } = pipelineResult;
+    db.updateQueueItemStatus(roomId, queueItemId, 'ready', {
+      stems,
+      chords,
+      keyInfo,
+      chordCount,
+      hasMidi: !!midiPath,
+      jobId,
+    });
+    db.updateJob(jobId, { status: 'completed', completedAt: Date.now(), output: { stems, chordCount, keyInfo } });
 
     try {
       const lyrics = await fetchLyrics(title, artist);
@@ -210,10 +219,18 @@ async function runPipeline(roomId, queueItemId, jobId, youtubeId, title, artist)
       };
     }
 
-    const stems = await fullPipeline(youtubeId, jobId);
+    const pipelineResult = await fullPipeline(youtubeId, jobId);
+    const { stems, chords, keyInfo, chordCount, midiPath } = pipelineResult;
 
-    db.updateQueueItemStatus(roomId, queueItemId, 'ready', { stems });
-    db.updateJob(jobId, { status: 'completed', completedAt: Date.now(), output: { stems } });
+    db.updateQueueItemStatus(roomId, queueItemId, 'ready', {
+      stems,
+      chords,
+      keyInfo,
+      chordCount,
+      hasMidi: !!midiPath,
+      jobId,
+    });
+    db.updateJob(jobId, { status: 'completed', completedAt: Date.now(), output: { stems, chordCount, keyInfo } });
 
     // Step 2: Fetch lyrics (parallel-ish, non-blocking)
     try {
@@ -270,6 +287,29 @@ router.get('/stems/:jobId/:stemName', (req, res) => {
   res.setHeader('Content-Type', contentType);
   res.setHeader('Cache-Control', 'public, max-age=3600');
   res.sendFile(stemPath);
+});
+
+// ── Chord detection artifacts ──
+
+router.get('/songs/:jobId/chords', (req, res) => {
+  const p = getChordsPath(req.params.jobId);
+  if (!p) return res.status(404).json({ error: 'Chords not found for this job' });
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  try {
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to read chord file: ' + e.message });
+  }
+});
+
+router.get('/songs/:jobId/midi', (req, res) => {
+  const p = getMidiPath(req.params.jobId);
+  if (!p) return res.status(404).json({ error: 'MIDI not found for this job' });
+  res.setHeader('Content-Type', 'audio/midi');
+  res.setHeader('Content-Disposition', `attachment; filename="${req.params.jobId}.mid"`);
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.sendFile(p);
 });
 
 // ── Job status ──
