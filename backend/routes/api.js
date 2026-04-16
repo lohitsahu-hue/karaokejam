@@ -6,10 +6,11 @@ const multer = require('multer');
 const db = require('../models/inMemory');
 const { searchYouTube } = require('../services/youtubeService');
 const { fetchLyrics } = require('../services/lyricService');
-const { fullPipeline, fullPipelineFromFile, getStemPath, getChordsPath, getMidiPath } = require('../services/stemExtractor');
+const { fullPipeline, fullPipelineFromFile, getStemPath, getChordsPath, getMidiPath, regenerateChords } = require('../services/stemExtractor');
 const fs = require('fs');
 const config = require('../config');
 const log = require('../utils/logger');
+const songLibrary = require('../services/songLibrary');
 
 // Configure multer for audio file uploads
 const upload = multer({
@@ -187,6 +188,9 @@ async function runUploadPipeline(roomId, queueItemId, jobId, audioPath, title, a
       io.to(roomId).emit('queue:updated', { queue: db.getRoom(roomId).queue });
       io.to(roomId).emit('job:ready', { queueItemId, jobId });
     }
+    // Save to song library for chord regeneration later
+    songLibrary.upsert(jobId, { title, artist, stems, keyInfo, timingInfo, chordCount, hasMidi: !!midiPath });
+
     log.info(`Upload pipeline complete for "${title}" (job ${jobId})`);
   } catch (e) {
     log.error(`Upload pipeline failed for "${title}" (job ${jobId}):`, e.message);
@@ -252,6 +256,9 @@ async function runPipeline(roomId, queueItemId, jobId, youtubeId, title, artist)
       io.to(roomId).emit('queue:updated', { queue: db.getRoom(roomId).queue });
       io.to(roomId).emit('job:ready', { queueItemId, jobId });
     }
+
+    // Save to song library for chord regeneration later
+    songLibrary.upsert(jobId, { title, artist, stems, keyInfo, timingInfo, chordCount, hasMidi: !!midiPath });
 
     log.info(`Pipeline complete for "${title}" (job ${jobId})`);
   } catch (e) {
@@ -395,6 +402,65 @@ router.post('/search/lyrics', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+});
+
+
+// ── Song Library (cached stems for chord regeneration) ──
+
+// List all processed songs
+router.get('/library', (req, res) => {
+  const songs = songLibrary.list();
+  res.json({ songs });
+});
+
+// Get a single library entry
+router.get('/library/:jobId', (req, res) => {
+  const song = songLibrary.get(req.params.jobId);
+  if (!song) return res.status(404).json({ error: 'Song not found in library' });
+  res.json(song);
+});
+
+// Regenerate chords for a cached song (skips Demucs)
+router.post('/library/:jobId/regenerate', async (req, res) => {
+  const song = songLibrary.get(req.params.jobId);
+  if (!song) return res.status(404).json({ error: 'Song not found in library' });
+
+  // Verify stems exist on disk
+  const missingStems = Object.entries(song.stemPaths || {})
+    .filter(([_, p]) => !fs.existsSync(p));
+  if (missingStems.length > 0) {
+    return res.status(400).json({
+      error: 'Some stems are missing from disk',
+      missing: missingStems.map(([name]) => name),
+    });
+  }
+
+  res.json({ status: 'started', jobId: req.params.jobId, message: 'Regenerating chords (Demucs skipped)...' });
+
+  // Run in background
+  try {
+    const result = await regenerateChords(req.params.jobId, song.stemPaths);
+    // Update library entry with new chord info
+    songLibrary.upsert(req.params.jobId, {
+      title: song.title,
+      artist: song.artist,
+      stems: song.stemPaths,
+      keyInfo: result.keyInfo,
+      timingInfo: result.timingInfo,
+      chordCount: result.chordCount,
+      hasMidi: !!result.midiPath,
+    });
+    log.info(`Library: regenerated chords for "${song.title}" → ${result.chordCount} chords`);
+  } catch (e) {
+    log.error(`Library: regenerate failed for "${song.title}": ${e.message}`);
+  }
+});
+
+// Delete a song from the library
+router.delete('/library/:jobId', (req, res) => {
+  const ok = songLibrary.remove(req.params.jobId);
+  if (!ok) return res.status(404).json({ error: 'Song not found' });
+  res.json({ status: 'deleted' });
 });
 
 module.exports = router;

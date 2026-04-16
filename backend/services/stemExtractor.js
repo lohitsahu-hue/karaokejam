@@ -622,3 +622,115 @@ module.exports = {
   getMidiPath,
   runpodPipeline,
 };
+
+// ─────────────────────────────────────────────
+//  REGENERATE CHORDS ONLY (skip Demucs)
+// ─────────────────────────────────────────────
+
+/**
+ * Send cached stems back to RunPod with chords_only=true.
+ * RunPod skips Demucs and re-runs: harmony mix → BTC → madmom → CREPE → MIDI.
+ * Returns the same shape as fullPipelineFromFile.
+ */
+async function regenerateChords(jobId, stemPaths) {
+  ensureDirs();
+  const { apiKey, endpointId } = config.runpod;
+  if (!apiKey || !endpointId) {
+    throw new Error('RunPod API key and endpoint ID required');
+  }
+  const baseUrl = `https://api.runpod.ai/v2/${endpointId}`;
+  const headers = {
+    'Authorization': `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+  };
+
+  // Read and base64-encode only the stems needed for chord detection:
+  // bass, other, vocals (or lead_vocals), drums (for beat tracking)
+  const stemsPayload = {};
+  const stemNames = ['bass', 'other', 'lead_vocals', 'backing_vocals', 'drums'];
+  for (const name of stemNames) {
+    const filePath = stemPaths[name];
+    if (filePath && fs.existsSync(filePath)) {
+      const buf = fs.readFileSync(filePath);
+      stemsPayload[name] = buf.toString('base64');
+      log.info(`Regenerate: loaded ${name} (${(buf.length / 1024 / 1024).toFixed(1)} MB)`);
+    }
+  }
+
+  if (!stemsPayload.bass || !stemsPayload.other) {
+    throw new Error('Cannot regenerate: bass and other stems are required');
+  }
+
+  log.info(`Regenerate: sending ${Object.keys(stemsPayload).length} cached stems to RunPod (chords_only)...`);
+
+  const submitRes = await fetch(`${baseUrl}/run`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      input: {
+        chords_only: true,
+        stems_base64: stemsPayload,
+        job_id: jobId,
+      },
+    }),
+  });
+
+  if (!submitRes.ok) {
+    const errText = await submitRes.text();
+    throw new Error(`RunPod submit failed (${submitRes.status}): ${errText}`);
+  }
+
+  const submitData = await submitRes.json();
+  const runpodJobId = submitData.id;
+  log.info(`Regenerate: job submitted → ${runpodJobId}`);
+
+  // Poll for completion (shorter timeout — no Demucs = much faster)
+  const POLL_INTERVAL = 3000;
+  const MAX_WAIT = 5 * 60 * 1000;
+  const startTime = Date.now();
+
+  if (regenerateChords._onProgress) {
+    regenerateChords._onProgress({ phase: 'Regenerating chords...', elapsed: 0, status: 'IN_PROGRESS' });
+  }
+
+  while (Date.now() - startTime < MAX_WAIT) {
+    await sleep(POLL_INTERVAL);
+    let statusRes;
+    try {
+      statusRes = await fetch(`${baseUrl}/status/${runpodJobId}`, { headers });
+    } catch (e) {
+      log.warn(`Regenerate: status fetch error: ${e.message}`);
+      continue;
+    }
+    if (!statusRes.ok) continue;
+
+    const statusData = await statusRes.json();
+    const status = statusData.status;
+
+    if (status === 'IN_QUEUE' || status === 'IN_PROGRESS') {
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      log.info(`Regenerate: ${status} (${elapsed}s)...`);
+      if (regenerateChords._onProgress) {
+        regenerateChords._onProgress({ phase: status === 'IN_QUEUE' ? 'Waiting for GPU...' : 'Analyzing chords...', elapsed, status });
+      }
+      continue;
+    }
+
+    if (status === 'COMPLETED') {
+      const output = statusData.output;
+      if (!output) throw new Error('RunPod returned no output');
+      if (output.error) throw new Error(`RunPod error: ${output.error}`);
+
+      log.info(`Regenerate: complete! ${(output.chords || []).length} chords detected.`);
+      const chordArtifacts = saveChordArtifacts(jobId, output);
+      return { chords: output.chords || null, ...chordArtifacts };
+    }
+
+    if (status === 'FAILED') {
+      throw new Error(`RunPod job FAILED: ${JSON.stringify(statusData.output?.error || statusData.error)}`);
+    }
+  }
+  throw new Error('Regenerate: job timed out');
+}
+
+module.exports.regenerateChords = regenerateChords;

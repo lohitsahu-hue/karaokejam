@@ -11,6 +11,7 @@ const App = {
     // Init sub-views
     SearchView.init();
     QueueView.init();
+    LibraryView.init();
     RoomView.init();
     MixerView.init();
 

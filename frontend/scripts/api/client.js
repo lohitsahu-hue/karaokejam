@@ -54,4 +54,9 @@ const API = {
 
   // Stems
   stemUrl(jobId, stemName) { return `/api/stems/${jobId}/${stemName}`; },
+
+  // Song Library
+  getLibrary() { return this.get('/api/library'); },
+  regenerateChords(jobId) { return this.post(`/api/library/${jobId}/regenerate`, {}); },
+  deleteFromLibrary(jobId) { return this.del(`/api/library/${jobId}`); },
 };
